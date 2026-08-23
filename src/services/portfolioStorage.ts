@@ -862,7 +862,7 @@ export const verifyAdminUser = async (): Promise<boolean> => {
       .from('admin_users')
       .select('id')
       .eq('user_id', session.user.id)
-      .single();
+      .maybeSingle();
 
     return !error && Boolean(data);
   } catch {

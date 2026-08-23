@@ -7,12 +7,12 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('Dayush849@gmail.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isForgotMode, setIsForgotMode] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('Dayush849@gmail.com');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -35,22 +35,28 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       if (authError) throw authError;
 
       if (data.session) {
-        // Verify admin authorization in admin_users table
+        // Verify admin authorization in admin_users table using maybeSingle()
         const { data: adminData, error: adminError } = await supabase
           .from('admin_users')
           .select('id')
           .eq('user_id', data.session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (adminError || !adminData) {
+        if (adminError) {
+          await supabase.auth.signOut();
+          throw new Error(`Admin verification failed: ${adminError.message}`);
+        }
+
+        if (!adminData) {
           await supabase.auth.signOut();
           throw new Error('Access denied. This account is not authorized as an administrator.');
         }
 
         onLoginSuccess();
       }
-    } catch (err: any) {
-      setError(err.message || 'Authentication failed. Please check your credentials.');
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -75,8 +81,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
       if (resetError) throw resetError;
 
       setForgotSuccess(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send password recovery email.');
+    } catch (err: unknown) {
+      const errorObj = err as Error;
+      setError(errorObj.message || 'Failed to send password recovery email.');
     } finally {
       setLoading(false);
     }
@@ -142,6 +149,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
                       required
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="admin@example.com"
                       className="w-full bg-[#151F2E] border border-[#263449] focus:border-[#2563EB] rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none"
                     />
                   </div>
@@ -181,6 +189,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
                   className="w-full bg-[#151F2E] border border-[#263449] focus:border-[#2563EB] rounded-lg pl-9 pr-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none"
                 />
               </div>
