@@ -20,9 +20,11 @@ import { supabase } from './lib/supabase';
 
 import { AdminLogin } from './components/admin/AdminLogin';
 import { AdminLayout } from './components/admin/AdminLayout';
+import { ResetPassword } from './components/admin/ResetPassword';
 
 export default function App() {
   const [isAdminRoute, setIsAdminRoute] = useState(false);
+  const [isResetPasswordRoute, setIsResetPasswordRoute] = useState(false);
   const [isAdminAuth, setIsAdminAuth] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
 
@@ -43,7 +45,10 @@ export default function App() {
     const handleRouteChange = async () => {
       const path = window.location.pathname;
       const hash = window.location.hash;
+      const isResetPass = path === '/reset-password' || hash === '#reset-password' || hash.includes('type=recovery');
       const isAdmin = path === '/admin' || path.startsWith('/admin') || hash === '#admin';
+
+      setIsResetPasswordRoute(isResetPass);
       setIsAdminRoute(isAdmin);
 
       if (isAdmin) {
@@ -61,7 +66,10 @@ export default function App() {
     window.addEventListener('hashchange', handleRouteChange);
     window.addEventListener('portfolio_updated', handleRouteChange);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async () => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsResetPasswordRoute(true);
+      }
       const authorized = await verifyAdminUser();
       setIsAdminAuth(authorized);
     });
@@ -73,6 +81,17 @@ export default function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  if (isResetPasswordRoute) {
+    return (
+      <ResetPassword 
+        onSuccess={() => {
+          window.location.hash = '';
+          window.location.pathname = '/admin';
+        }}
+      />
+    );
+  }
 
   // If user is accessing /admin
   if (isAdminRoute) {
