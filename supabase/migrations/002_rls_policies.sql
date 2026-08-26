@@ -101,3 +101,16 @@ create policy "Admins can view admin users" on admin_users
 
 create policy "Admins can insert admin users" on admin_users
   for insert with check (exists (select 1 from admin_users where user_id = auth.uid()));
+
+-- Helper function to atomically set the active published resume
+create or replace function set_published_resume(p_resume_id text)
+returns void as $$
+begin
+  if not fn_is_admin() then
+    raise exception 'Unauthorized: Admin privileges required';
+  end if;
+
+  update resumes set published = false where id <> p_resume_id;
+  update resumes set published = true where id = p_resume_id;
+end;
+$$ language plpgsql security definer;

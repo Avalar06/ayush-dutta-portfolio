@@ -840,23 +840,32 @@ export const saveSiteSettingsToSupabase = async (settings: SiteSettings): Promis
 };
 
 export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> => {
+  // Update local cache optimistically
+  if (resume.published) {
+    cachedPortfolioData.resumes = (cachedPortfolioData.resumes || []).map(r => ({
+      ...r,
+      published: r.id === resume.id
+    }));
+  }
+  const idx = (cachedPortfolioData.resumes || []).findIndex(r => r.id === resume.id);
+  if (idx >= 0) cachedPortfolioData.resumes[idx] = resume;
+  else cachedPortfolioData.resumes.unshift(resume);
+  window.dispatchEvent(new Event('portfolio_updated'));
+
   if (!isSupabaseConfigured()) {
-    if (resume.published) {
-      cachedPortfolioData.resumes = cachedPortfolioData.resumes.map(r => ({
-        ...r,
-        published: r.id === resume.id
-      }));
-    }
-    const idx = cachedPortfolioData.resumes.findIndex(r => r.id === resume.id);
-    if (idx >= 0) cachedPortfolioData.resumes[idx] = resume;
-    else cachedPortfolioData.resumes.unshift(resume);
-    window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   // If publishing this resume, unpublish all others to maintain exactly one active published resume
   if (resume.published) {
-    await supabase.from('resumes').update({ published: false }).neq('id', resume.id);
+    const { error: unpubError } = await supabase
+      .from('resumes')
+      .update({ published: false })
+      .neq('id', resume.id);
+
+    if (unpubError) {
+      console.warn('Warning: Could not unpublish other resumes:', unpubError);
+    }
   }
 
   const { error } = await supabase.from('resumes').upsert({
@@ -868,38 +877,78 @@ export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> =>
     published: resume.published ?? false
   });
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error saving resume to Supabase:', error);
+    throw new Error(error.message || 'Failed to save resume record.');
+  }
+
   await fetchPortfolioDataFromSupabase();
 };
 
 export const setPublishedResumeInSupabase = async (id: string): Promise<void> => {
+  // Update local cache immediately
+  cachedPortfolioData.resumes = (cachedPortfolioData.resumes || []).map(r => ({
+    ...r,
+    published: r.id === id
+  }));
+  window.dispatchEvent(new Event('portfolio_updated'));
+
   if (!isSupabaseConfigured()) {
-    cachedPortfolioData.resumes = cachedPortfolioData.resumes.map(r => ({
-      ...r,
-      published: r.id === id
-    }));
-    window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
-  const { error: unpubError } = await supabase.from('resumes').update({ published: false }).neq('id', id);
-  if (unpubError) throw unpubError;
+  // Optional: Try atomic database RPC function if installed
+  try {
+    const { error: rpcError } = await supabase.rpc('set_published_resume', { p_resume_id: id });
+    if (!rpcError) {
+      await fetchPortfolioDataFromSupabase();
+      return;
+    }
+  } catch {
+    // If RPC function does not exist in the database, seamlessly proceed with direct REST queries
+  }
 
-  const { error: pubError } = await supabase.from('resumes').update({ published: true }).eq('id', id);
-  if (pubError) throw pubError;
+  // Step 1: Unpublish all other resumes
+  const { error: unpubError } = await supabase
+    .from('resumes')
+    .update({ published: false })
+    .neq('id', id);
 
+  if (unpubError) {
+    console.error('Error unpublishing other resumes:', unpubError);
+    throw new Error(unpubError.message || 'Failed to unpublish other resumes.');
+  }
+
+  // Step 2: Publish target resume
+  const { error: pubError } = await supabase
+    .from('resumes')
+    .update({ published: true })
+    .eq('id', id);
+
+  if (pubError) {
+    console.error('Error setting active published resume:', pubError);
+    throw new Error(pubError.message || 'Failed to publish selected resume.');
+  }
+
+  // Step 3: Refresh local state from database
   await fetchPortfolioDataFromSupabase();
 };
 
 export const deleteResumeFromSupabase = async (id: string): Promise<void> => {
+  // Update local cache optimistically
+  cachedPortfolioData.resumes = (cachedPortfolioData.resumes || []).filter(r => r.id !== id);
+  window.dispatchEvent(new Event('portfolio_updated'));
+
   if (!isSupabaseConfigured()) {
-    cachedPortfolioData.resumes = cachedPortfolioData.resumes.filter(r => r.id !== id);
-    window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('resumes').delete().eq('id', id);
-  if (error) throw error;
+  if (error) {
+    console.error('Error deleting resume:', error);
+    throw new Error(error.message || 'Failed to delete resume record.');
+  }
+
   await fetchPortfolioDataFromSupabase();
 };
 
