@@ -1,139 +1,276 @@
-import React, { useState } from 'react';
-import { X, FileText, Download, ShieldCheck, Cpu } from 'lucide-react';
-import { portfolioData } from '../data/portfolioData';
+import React, { useState, useEffect } from 'react';
+import { X, FileText, Download, ExternalLink, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { ResumeItem, getPortfolioData, getPublishedResumes } from '../services/portfolioStorage';
 
 interface ResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedResumeId?: string | null;
 }
 
-export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => {
-  const [selectedTab, setSelectedTab] = useState<'cybersecurity' | 'general'>('cybersecurity');
+export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selectedResumeId }) => {
+  const [, setTick] = useState(0);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isFrameLoading, setIsFrameLoading] = useState(true);
+  const [iframeError, setIframeError] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  // Subscribe to updates from Supabase/admin
+  useEffect(() => {
+    const handleUpdate = () => setTick(t => t + 1);
+    window.addEventListener('portfolio_updated', handleUpdate);
+    return () => window.removeEventListener('portfolio_updated', handleUpdate);
+  }, []);
+
+  const publishedResumes = getPublishedResumes();
+
+  // Set active resume when modal opens or selectedResumeId changes
+  useEffect(() => {
+    if (isOpen) {
+      setIsFrameLoading(true);
+      setIframeError(false);
+      if (selectedResumeId && publishedResumes.some(r => r.id === selectedResumeId)) {
+        setActiveId(selectedResumeId);
+      } else if (publishedResumes.length > 0) {
+        setActiveId(publishedResumes[0].id);
+      } else {
+        setActiveId(null);
+      }
+    }
+  }, [isOpen, selectedResumeId, publishedResumes.length]);
 
   if (!isOpen) return null;
 
-  const activeResume = portfolioData.resumes.find((r) => r.id === selectedTab) || portfolioData.resumes[0];
+  const activeResume: ResumeItem | undefined = publishedResumes.find(r => r.id === activeId) || publishedResumes[0];
 
-  const handleDownload = () => {
-    if (!activeResume.pdfPath) return;
-    const a = document.createElement('a');
-    a.href = activeResume.pdfPath.replace('/public/', '/');
-    a.target = '_blank';
-    a.download = `${activeResume.title.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const getResolvedUrl = (path?: string): string => {
+    if (!path) return '';
+    const trimmed = path.trim();
+    if (trimmed.startsWith('/public/')) {
+      return trimmed.replace('/public/', '/');
+    }
+    return trimmed;
   };
 
-  const handleOpenNewTab = () => {
-    if (activeResume.pdfPath) {
-      window.open(activeResume.pdfPath.replace('/public/', '/'), '_blank', 'noopener,noreferrer');
+  const handleDownload = async (resume: ResumeItem) => {
+    if (!resume.pdfPath) return;
+    setIsDownloading(true);
+    try {
+      const rawUrl = getResolvedUrl(resume.pdfPath);
+      const safeTitle = (resume.title || 'resume').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+      const fileName = `${safeTitle}.pdf`;
+
+      if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+        const response = await fetch(rawUrl);
+        if (!response.ok) throw new Error(`Download HTTP error: ${response.status}`);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+      } else {
+        const link = document.createElement('a');
+        link.href = rawUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err) {
+      console.warn('Blob download fallback triggered:', err);
+      const link = document.createElement('a');
+      link.href = getResolvedUrl(resume.pdfPath);
+      link.target = '_blank';
+      link.download = `${(resume.title || 'resume').replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
+  const handleOpenNewTab = (resume: ResumeItem) => {
+    if (!resume.pdfPath) return;
+    const url = getResolvedUrl(resume.pdfPath);
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn overflow-y-auto py-10">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/85 backdrop-blur-md animate-fadeIn overflow-y-auto"
+      onClick={onClose}
+    >
       <div 
-        className="relative w-full max-w-3xl bg-[#111827] border border-[#263449] rounded-xl shadow-2xl p-6 md:p-8 my-auto"
+        className="relative w-full max-w-4xl bg-[#111827] border border-[#263449] rounded-xl shadow-2xl p-5 sm:p-6 my-auto flex flex-col max-h-[92vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-[#94A3B8] hover:text-[#F8FAFC] bg-[#151F2E] p-2 rounded-lg transition-colors z-10 border border-[#263449]"
-          aria-label="Close modal"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        <div className="flex items-center space-x-3 mb-6 border-b border-[#263449] pb-4">
-          <div className="p-2.5 bg-[#2563EB]/10 border border-[#2563EB]/30 text-[#2563EB] rounded-lg">
-            <FileText className="w-5 h-5" />
+        {/* Header */}
+        <div className="flex items-start justify-between border-b border-[#263449] pb-4 mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2.5 bg-[#2563EB]/10 border border-[#2563EB]/30 text-[#2563EB] rounded-lg">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC]">
+                {activeResume ? activeResume.title : 'Curriculum Vitae Viewer'}
+              </h3>
+              <p className="text-xs text-[#94A3B8] font-mono">
+                {activeResume ? `Target: ${activeResume.targetRoles}` : 'Published Resume Document'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-[#F8FAFC]">Ayush Dutta — Resume Viewer</h3>
-            <span className="text-xs text-[#94A3B8] font-mono">Select profile version to preview</span>
-          </div>
-        </div>
 
-        {/* Tab Toggle */}
-        <div className="flex space-x-2 bg-[#151F2E] p-1 rounded-lg border border-[#263449] mb-6 max-w-sm">
           <button
-            onClick={() => setSelectedTab('cybersecurity')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded text-xs font-semibold transition-colors ${
-              selectedTab === 'cybersecurity'
-                ? 'bg-[#2563EB] text-[#F8FAFC]'
-                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
-            }`}
+            onClick={onClose}
+            className="text-[#94A3B8] hover:text-[#F8FAFC] bg-[#151F2E] hover:bg-[#263449] p-2 rounded-lg transition-colors border border-[#263449]"
+            aria-label="Close modal"
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Cybersecurity CV</span>
-          </button>
-          <button
-            onClick={() => setSelectedTab('general')}
-            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded text-xs font-semibold transition-colors ${
-              selectedTab === 'general'
-                ? 'bg-[#2563EB] text-[#F8FAFC]'
-                : 'text-[#94A3B8] hover:text-[#F8FAFC]'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            <span>General Tech CV</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Resume Preview Box */}
-        <div className="bg-[#151F2E] border border-[#263449] rounded-lg p-5 mb-6 max-h-[45vh] overflow-y-auto custom-scrollbar text-xs sm:text-sm space-y-4">
-          <div className="border-b border-[#263449] pb-3">
-            <h4 className="font-bold text-[#F8FAFC] text-base">{activeResume.title}</h4>
-            <span className="text-xs text-[#2563EB] font-mono block mt-0.5">Target: {activeResume.targetRoles}</span>
-            <p className="text-xs text-[#94A3B8] mt-1">{activeResume.description}</p>
+        {/* Tab Selection if multiple published versions exist */}
+        {publishedResumes.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-4 bg-[#151F2E] p-1.5 rounded-lg border border-[#263449]">
+            {publishedResumes.map((resume) => {
+              const isSelected = (activeResume?.id === resume.id);
+              return (
+                <button
+                  key={resume.id}
+                  onClick={() => {
+                    setActiveId(resume.id);
+                    setIsFrameLoading(true);
+                    setIframeError(false);
+                  }}
+                  className={`flex items-center space-x-2 py-1.5 px-3 rounded text-xs font-semibold transition-colors ${
+                    isSelected
+                      ? 'bg-[#2563EB] text-[#F8FAFC] shadow-sm'
+                      : 'text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#263449]/50'
+                  }`}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{resume.title}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Content Area */}
+        {!activeResume ? (
+          <div className="p-10 text-center bg-[#151F2E] border border-[#263449] rounded-xl my-4">
+            <AlertCircle className="w-10 h-10 text-[#94A3B8] mx-auto mb-3 opacity-60" />
+            <h4 className="text-base font-bold text-[#F8FAFC] mb-1">Resume Currently Unavailable</h4>
+            <p className="text-xs text-[#94A3B8] max-w-md mx-auto leading-relaxed">
+              The resume document is currently being updated by the administrator. Please check back shortly or contact directly.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3 flex-1 flex flex-col min-h-0">
+            {/* Description note */}
+            {activeResume.description && (
+              <p className="text-xs text-[#94A3B8] leading-relaxed bg-[#151F2E] px-3.5 py-2 rounded-lg border border-[#263449]/70">
+                {activeResume.description}
+              </p>
+            )}
+
+            {/* In-Browser PDF Preview Iframe */}
+            <div className="relative w-full flex-1 min-h-[380px] sm:min-h-[460px] md:min-h-[520px] bg-[#0B1220] rounded-lg border border-[#263449] overflow-hidden">
+              {isFrameLoading && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1220] z-10 text-[#94A3B8]">
+                  <Loader2 className="w-8 h-8 text-[#2563EB] animate-spin mb-3" />
+                  <span className="text-xs font-mono">Loading PDF preview...</span>
+                </div>
+              )}
+
+              {activeResume.pdfPath ? (
+                <iframe
+                  src={`${getResolvedUrl(activeResume.pdfPath)}#toolbar=1&navpanes=0&scrollbar=1`}
+                  title={`${activeResume.title} Preview`}
+                  className="w-full h-full border-0"
+                  onLoad={() => setIsFrameLoading(false)}
+                  onError={() => {
+                    setIsFrameLoading(false);
+                    setIframeError(true);
+                  }}
+                />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-[#94A3B8] p-6 text-center">
+                  <AlertCircle className="w-8 h-8 text-[#EF4444] mb-2" />
+                  <p className="text-xs font-medium text-[#F8FAFC]">No document path specified for this resume.</p>
+                </div>
+              )}
+
+              {iframeError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0B1220] z-10 text-[#94A3B8] p-6 text-center">
+                  <AlertCircle className="w-8 h-8 text-[#EF4444] mb-2" />
+                  <p className="text-xs font-medium text-[#F8FAFC] mb-2">Direct iframe preview could not be displayed.</p>
+                  <button
+                    onClick={() => handleOpenNewTab(activeResume)}
+                    className="inline-flex items-center space-x-1 text-xs text-[#2563EB] hover:underline"
+                  >
+                    <span>Open in new tab instead</span>
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal Footer Controls */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 mt-4 border-t border-[#263449]">
+          <div className="text-[11px] text-[#94A3B8] font-mono truncate max-w-[280px]">
+            {activeResume?.pdfPath ? (
+              <span className="truncate">Source: {activeResume.pdfPath.split('/').pop()}</span>
+            ) : (
+              <span>Status: Live Dynamic Resume</span>
+            )}
           </div>
 
-          <div className="space-y-3 text-[#94A3B8]">
-            <div className="bg-[#0B1220] p-3.5 rounded border border-[#263449]">
-              <span className="text-[#F8FAFC] font-semibold block mb-1 text-xs uppercase font-mono">Contact Info</span>
-              <p>Ayush Dutta | Bardhaman, West Bengal, India</p>
-              <p>Email: {portfolioData.personal.email} | Phone: {portfolioData.personal.phone}</p>
-              <p>LinkedIn: {portfolioData.personal.linkedin}</p>
-            </div>
-
-            <div className="bg-[#0B1220] p-3.5 rounded border border-[#263449]">
-              <span className="text-[#F8FAFC] font-semibold block mb-1 text-xs uppercase font-mono">Education</span>
-              <p>• M.Sc. in IT Cybersecurity — MAKAUT (2024–2026) | CGPA: 8.04 / 10</p>
-              <p>• Bachelor of Computer Applications (BCA) — NSHM Knowledge Campus (2020–2023) | SGPA: 8.95 / 10</p>
-            </div>
-
-            <div className="bg-[#0B1220] p-3.5 rounded border border-[#263449]">
-              <span className="text-[#F8FAFC] font-semibold block mb-1 text-xs uppercase font-mono">Experience & Internship</span>
-              <p>• Cybersecurity Intern — NIELIT Virtual Academy (July – August 2025)</p>
-              <p className="text-xs text-[#94A3B8] mt-0.5">Vulnerability analysis, TLS/SSL review, network defence, threat modelling, and security reporting aligned with OWASP & NIST.</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Modal Actions */}
-        <div className="flex items-center justify-between pt-4 border-t border-[#263449]">
-          <span className="text-[11px] text-[#94A3B8] font-mono">File: {activeResume.pdfPath}</span>
-          <div className="flex space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-[#151F2E] hover:bg-[#263449] text-[#94A3B8] text-xs font-medium transition-colors border border-[#263449]"
+              className="px-3.5 py-2 rounded-lg bg-[#151F2E] hover:bg-[#263449] text-[#94A3B8] text-xs font-medium transition-colors border border-[#263449]"
             >
               Close
             </button>
-            <button
-              onClick={handleOpenNewTab}
-              className="inline-flex items-center space-x-1.5 bg-[#151F2E] hover:bg-[#263449] text-[#F8FAFC] font-medium px-3.5 py-2 rounded-lg transition-colors text-xs border border-[#263449]"
-            >
-              <span>Open in New Tab</span>
-            </button>
-            <button
-              onClick={handleDownload}
-              className="inline-flex items-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-medium px-4 py-2 rounded-lg transition-colors text-xs shadow-sm"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Download PDF</span>
-            </button>
+
+            {activeResume && (
+              <>
+                <button
+                  onClick={() => handleOpenNewTab(activeResume)}
+                  className="inline-flex items-center space-x-1.5 bg-[#151F2E] hover:bg-[#263449] text-[#F8FAFC] font-medium px-3.5 py-2 rounded-lg transition-colors text-xs border border-[#263449]"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span className="hidden xs:inline">Open in New Tab</span>
+                  <span className="xs:hidden">Open</span>
+                </button>
+
+                <button
+                  onClick={() => handleDownload(activeResume)}
+                  disabled={isDownloading}
+                  className="inline-flex items-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] disabled:opacity-50 text-[#F8FAFC] font-semibold px-4 py-2 rounded-lg transition-colors text-xs shadow-sm"
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Downloading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download PDF</span>
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

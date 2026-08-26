@@ -86,6 +86,15 @@ export interface SiteSettings {
   focusAreas: string[];
 }
 
+export interface ResumeItem {
+  id: string;
+  title: string;
+  targetRoles: string;
+  description: string;
+  pdfPath: string;
+  published?: boolean;
+}
+
 export interface PortfolioDatabase {
   personal: SiteSettings;
   about: {
@@ -98,7 +107,7 @@ export interface PortfolioDatabase {
   education: EducationItem[];
   skills: SkillCategory[];
   securityPractices: { title: string; description: string; icon: string }[];
-  resumes: { id: string; title: string; targetRoles: string; description: string; pdfPath: string }[];
+  resumes: ResumeItem[];
 }
 
 export const initialPortfolioData: PortfolioDatabase = {
@@ -449,14 +458,16 @@ export const initialPortfolioData: PortfolioDatabase = {
       title: "Cybersecurity Resume",
       targetRoles: "SOC Analyst, Security Analyst, Cybersecurity Analyst, Security Engineer",
       description: "Tailored to highlight M.Sc. Cybersecurity coursework, NIELIT internship, SIEM-style ML log anomaly project, and security frameworks (NIST, OWASP).",
-      pdfPath: "/public/resumes/Ayush_Dutta_Cybersecurity_CV.pdf"
+      pdfPath: "/public/resumes/Ayush_Dutta_Cybersecurity_CV.pdf",
+      published: true
     },
     {
       id: "general",
       title: "General Technology Resume",
       targetRoles: "IT, Data Analysis, Operations, Support, Technology roles",
       description: "Broad technology profile emphasizing Python, data science basics, BCA capstone project, system support, and documentation skills.",
-      pdfPath: "/public/resumes/Ayush_Dutta_General_CV.pdf"
+      pdfPath: "/public/resumes/Ayush_Dutta_General_CV.pdf",
+      published: true
     }
   ]
 };
@@ -466,6 +477,19 @@ let cachedPortfolioData: PortfolioDatabase = { ...initialPortfolioData };
 
 export const getPortfolioData = (): PortfolioDatabase => {
   return cachedPortfolioData;
+};
+
+export const getPublishedResumes = (): ResumeItem[] => {
+  const resumes = cachedPortfolioData.resumes || [];
+  return resumes.filter(r => r.published === true);
+};
+
+export const getActivePublishedResume = (): ResumeItem | null => {
+  const published = getPublishedResumes();
+  if (published.length > 0) {
+    return published[0];
+  }
+  return null;
 };
 
 // Fetch data from Supabase asynchronously
@@ -580,12 +604,20 @@ export const fetchPortfolioDataFromSupabase = async (): Promise<PortfolioDatabas
       icon: sp.icon
     })) : initialPortfolioData.securityPractices;
 
-    const resumes = (resumesRes.data || []).length > 0 ? resumesRes.data.map((r: any) => ({
+    const resumes: ResumeItem[] = (resumesRes.data || []).length > 0 ? (resumesRes.data as Array<{
+      id: string;
+      title: string;
+      target_roles: string;
+      description: string;
+      pdf_path: string;
+      published?: boolean;
+    }>).map((r) => ({
       id: r.id,
       title: r.title,
       targetRoles: r.target_roles,
       description: r.description,
-      pdfPath: r.pdf_path
+      pdfPath: r.pdf_path,
+      published: r.published ?? true
     })) : initialPortfolioData.resumes;
 
     cachedPortfolioData = {
@@ -803,6 +835,70 @@ export const saveSiteSettingsToSupabase = async (settings: SiteSettings): Promis
     updated_at: new Date().toISOString()
   });
 
+  if (error) throw error;
+  await fetchPortfolioDataFromSupabase();
+};
+
+export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> => {
+  if (!isSupabaseConfigured()) {
+    if (resume.published) {
+      cachedPortfolioData.resumes = cachedPortfolioData.resumes.map(r => ({
+        ...r,
+        published: r.id === resume.id
+      }));
+    }
+    const idx = cachedPortfolioData.resumes.findIndex(r => r.id === resume.id);
+    if (idx >= 0) cachedPortfolioData.resumes[idx] = resume;
+    else cachedPortfolioData.resumes.unshift(resume);
+    window.dispatchEvent(new Event('portfolio_updated'));
+    return;
+  }
+
+  // If publishing this resume, unpublish all others to maintain exactly one active published resume
+  if (resume.published) {
+    await supabase.from('resumes').update({ published: false }).neq('id', resume.id);
+  }
+
+  const { error } = await supabase.from('resumes').upsert({
+    id: resume.id,
+    title: resume.title,
+    target_roles: resume.targetRoles,
+    description: resume.description,
+    pdf_path: resume.pdfPath,
+    published: resume.published ?? false
+  });
+
+  if (error) throw error;
+  await fetchPortfolioDataFromSupabase();
+};
+
+export const setPublishedResumeInSupabase = async (id: string): Promise<void> => {
+  if (!isSupabaseConfigured()) {
+    cachedPortfolioData.resumes = cachedPortfolioData.resumes.map(r => ({
+      ...r,
+      published: r.id === id
+    }));
+    window.dispatchEvent(new Event('portfolio_updated'));
+    return;
+  }
+
+  const { error: unpubError } = await supabase.from('resumes').update({ published: false }).neq('id', id);
+  if (unpubError) throw unpubError;
+
+  const { error: pubError } = await supabase.from('resumes').update({ published: true }).eq('id', id);
+  if (pubError) throw pubError;
+
+  await fetchPortfolioDataFromSupabase();
+};
+
+export const deleteResumeFromSupabase = async (id: string): Promise<void> => {
+  if (!isSupabaseConfigured()) {
+    cachedPortfolioData.resumes = cachedPortfolioData.resumes.filter(r => r.id !== id);
+    window.dispatchEvent(new Event('portfolio_updated'));
+    return;
+  }
+
+  const { error } = await supabase.from('resumes').delete().eq('id', id);
   if (error) throw error;
   await fetchPortfolioDataFromSupabase();
 };

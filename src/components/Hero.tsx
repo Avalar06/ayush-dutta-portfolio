@@ -1,12 +1,27 @@
-import React from 'react';
-import { ShieldCheck, GraduationCap, BadgeCheck, Target, ArrowRight, Download, Github, Linkedin, Mail } from 'lucide-react';
-import { portfolioData } from '../data/portfolioData';
+import React, { useState, useEffect } from 'react';
+import { ArrowRight, Download, Github, Linkedin, Mail } from 'lucide-react';
+import { getPortfolioData, getActivePublishedResume } from '../services/portfolioStorage';
 
 interface HeroProps {
   onOpenResumeModal: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
+  const [data, setData] = useState(() => getPortfolioData());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setData({ ...getPortfolioData() });
+    };
+
+    window.addEventListener('portfolio_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('portfolio_updated', handleUpdate);
+    };
+  }, []);
+
+  const activeResume = getActivePublishedResume();
+
   return (
     <section id="home" className="relative pt-32 pb-20 md:pt-44 md:pb-28 bg-[#0B1220] border-b border-[#263449]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,7 +36,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
 
           {/* Name */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold text-[#F8FAFC] tracking-tight mb-4">
-            {portfolioData.personal.name}
+            {data.personal.name}
           </h1>
 
           {/* Primary Statement */}
@@ -45,6 +60,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
 
             <button
               onClick={onOpenResumeModal}
+              title={activeResume ? `View & Download ${activeResume.title}` : 'View Resume'}
               className="inline-flex items-center justify-center space-x-2 bg-[#111827] hover:bg-[#151F2E] border border-[#263449] text-[#F8FAFC] font-medium px-7 py-3 rounded-lg transition-colors text-sm"
             >
               <Download className="w-4 h-4 text-[#2563EB]" />
@@ -55,14 +71,14 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
           {/* Social Links */}
           <div className="flex flex-wrap items-center gap-3 pt-6 border-t border-[#263449]">
             <a
-              href={`mailto:${portfolioData.personal.email}`}
+              href={`mailto:${data.personal.email}`}
               className="inline-flex items-center space-x-2 text-[#94A3B8] hover:text-[#F8FAFC] bg-[#111827] border border-[#263449] px-3.5 py-2 rounded-lg text-xs font-mono transition-colors"
             >
               <Mail className="w-3.5 h-3.5 text-[#2563EB]" />
-              <span>{portfolioData.personal.email}</span>
+              <span>{data.personal.email}</span>
             </a>
             <a
-              href={portfolioData.personal.linkedin}
+              href={data.personal.linkedin}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 text-[#94A3B8] hover:text-[#F8FAFC] bg-[#111827] border border-[#263449] px-3.5 py-2 rounded-lg text-xs font-mono transition-colors"
@@ -71,7 +87,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
               <span>LinkedIn</span>
             </a>
             <a
-              href={portfolioData.personal.github}
+              href={data.personal.github}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 text-[#94A3B8] hover:text-[#F8FAFC] bg-[#111827] border border-[#263449] px-3.5 py-2 rounded-lg text-xs font-mono transition-colors"

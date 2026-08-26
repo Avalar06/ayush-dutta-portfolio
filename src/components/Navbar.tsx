@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Shield, Menu, X, Download } from 'lucide-react';
-import { portfolioData } from '../data/portfolioData';
+import { getPortfolioData, getActivePublishedResume } from '../services/portfolioStorage';
 
 interface NavbarProps {
   onOpenResumeModal: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
+  const [data, setData] = useState(() => getPortfolioData());
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
   useEffect(() => {
+    const handleUpdate = () => {
+      setData({ ...getPortfolioData() });
+    };
+
+    window.addEventListener('portfolio_updated', handleUpdate);
+    return () => window.removeEventListener('portfolio_updated', handleUpdate);
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
 
-      const sections = ['home', 'about', 'skills', 'projects', 'experience', 'certifications', 'education', 'contact'];
+      const sections = ['home', 'about', 'skills', 'projects', 'experience', 'certifications', 'education', 'resume', 'contact'];
       const scrollPosition = window.scrollY + 180;
 
       for (const section of sections) {
@@ -35,6 +45,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const activeResume = getActivePublishedResume();
+
   const navItems = [
     { label: 'Home', href: '#home', id: 'home' },
     { label: 'About', href: '#about', id: 'about' },
@@ -43,6 +55,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
     { label: 'Experience', href: '#experience', id: 'experience' },
     { label: 'Certifications', href: '#certifications', id: 'certifications' },
     { label: 'Education', href: '#education', id: 'education' },
+    { label: 'Resume', href: '#resume', id: 'resume' },
     { label: 'Contact', href: '#contact', id: 'contact' },
   ];
 
@@ -66,7 +79,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
             </div>
             <div>
               <span className="font-semibold text-[#F8FAFC] tracking-tight text-sm md:text-base block group-hover:text-[#3B82F6] transition-colors">
-                {portfolioData.personal.name}
+                {data.personal.name}
               </span>
               <span className="text-[10px] text-[#94A3B8] font-mono tracking-wider block">
                 CYBERSECURITY & TECH
@@ -98,6 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenResumeModal }) => {
           <div className="hidden md:flex items-center space-x-4">
             <button
               onClick={onOpenResumeModal}
+              title={activeResume ? `View & Download ${activeResume.title}` : 'Download Resume'}
               className="inline-flex items-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm"
             >
               <Download className="w-3.5 h-3.5" />

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Shield, LayoutDashboard, FolderKanban, Award, Briefcase, GraduationCap, Settings, LogOut, ExternalLink, Menu, X } from 'lucide-react';
+import { Shield, LayoutDashboard, FolderKanban, Award, Briefcase, GraduationCap, FileText, Settings, LogOut, ExternalLink, Menu, X } from 'lucide-react';
 import { PortfolioDatabase, getPortfolioData, Project } from '../../services/portfolioStorage';
 import { AdminDashboardView } from './AdminDashboardView';
 import { ProjectsManager } from './ProjectsManager';
 import { CertificationsManager } from './CertificationsManager';
 import { ExperienceManager } from './ExperienceManager';
 import { EducationManager } from './EducationManager';
+import { ResumeManager } from './ResumeManager';
 import { SiteSettingsManager } from './SiteSettingsManager';
 
 interface AdminLayoutProps {
@@ -15,7 +16,7 @@ interface AdminLayoutProps {
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onPreviewProjectModal }) => {
   const [data, setData] = useState<PortfolioDatabase>(getPortfolioData());
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'certifications' | 'experience' | 'education' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'certifications' | 'experience' | 'education' | 'resume' | 'settings'>('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const refreshData = () => {
@@ -34,6 +35,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onPreviewPro
     { id: 'certifications', label: 'Certifications', icon: Award },
     { id: 'experience', label: 'Experience', icon: Briefcase },
     { id: 'education', label: 'Education', icon: GraduationCap },
+    { id: 'resume', label: 'Resume', icon: FileText },
     { id: 'settings', label: 'Site Settings', icon: Settings },
   ];
 
@@ -176,6 +178,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onPreviewPro
           )}
           {activeTab === 'education' && (
             <EducationManager data={data} onUpdate={refreshData} />
+          )}
+          {activeTab === 'resume' && (
+            <ResumeManager data={data} onUpdate={refreshData} />
           )}
           {activeTab === 'settings' && (
             <SiteSettingsManager data={data} onUpdate={refreshData} />

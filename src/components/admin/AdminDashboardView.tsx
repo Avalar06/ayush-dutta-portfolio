@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, FolderKanban, Award, GraduationCap, Briefcase, CheckCircle, Clock } from 'lucide-react';
+import { Shield, FolderKanban, Award, GraduationCap, Briefcase, FileText, CheckCircle, Clock } from 'lucide-react';
 import { PortfolioDatabase } from '../../services/portfolioStorage';
 
 interface AdminDashboardViewProps {
@@ -12,6 +12,8 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
   const draftProjectsCount = data.projects.filter(p => p.published === false).length;
   const certsCount = data.certifications.length;
   const expCount = data.experience.length;
+  const resumesCount = (data.resumes || []).length;
+  const activeResume = (data.resumes || []).find(r => r.published !== false);
 
   return (
     <div className="space-y-8">
@@ -23,7 +25,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <div 
           onClick={() => onNavigateTab('projects')}
           className="bg-[#151F2E] border border-[#263449] rounded-xl p-5 cursor-pointer hover:border-[#2563EB] transition-colors"
@@ -61,6 +63,20 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         <div 
+          onClick={() => onNavigateTab('resume')}
+          className="bg-[#151F2E] border border-[#263449] rounded-xl p-5 cursor-pointer hover:border-[#2563EB] transition-colors"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs uppercase tracking-wider font-mono text-[#94A3B8]">Resume CVs</span>
+            <FileText className="w-5 h-5 text-[#2563EB]" />
+          </div>
+          <span className="text-3xl font-bold text-[#F8FAFC]">{resumesCount}</span>
+          <span className="text-[11px] text-[#10B981] block mt-1 truncate">
+            {activeResume ? activeResume.title : 'No active CV'}
+          </span>
+        </div>
+
+        <div 
           onClick={() => onNavigateTab('settings')}
           className="bg-[#151F2E] border border-[#263449] rounded-xl p-5 cursor-pointer hover:border-[#2563EB] transition-colors"
         >
@@ -76,7 +92,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
       {/* Quick Actions */}
       <div className="bg-[#151F2E] border border-[#263449] rounded-xl p-6">
         <h3 className="text-sm font-bold text-[#F8FAFC] mb-4">Quick Management Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             onClick={() => onNavigateTab('projects')}
             className="p-4 bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-lg text-left transition-colors group"
@@ -96,10 +112,19 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
           </button>
 
           <button
+            onClick={() => onNavigateTab('resume')}
+            className="p-4 bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-lg text-left transition-colors group"
+          >
+            <span className="text-xs font-mono text-[#2563EB] block mb-1">03 // RESUME</span>
+            <span className="font-semibold text-[#F8FAFC] text-sm block group-hover:text-[#2563EB] transition-colors">Resume & CV Manager</span>
+            <span className="text-[11px] text-[#94A3B8]">Upload & publish active CV</span>
+          </button>
+
+          <button
             onClick={() => onNavigateTab('settings')}
             className="p-4 bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-lg text-left transition-colors group"
           >
-            <span className="text-xs font-mono text-[#2563EB] block mb-1">03 // SETTINGS</span>
+            <span className="text-xs font-mono text-[#10B981] block mb-1">04 // SETTINGS</span>
             <span className="font-semibold text-[#F8FAFC] text-sm block group-hover:text-[#2563EB] transition-colors">Site Settings</span>
             <span className="text-[11px] text-[#94A3B8]">Modify contact & profile summary</span>
           </button>

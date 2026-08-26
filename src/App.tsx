@@ -32,6 +32,12 @@ export default function App() {
   const [selectedCaseStudyProject, setSelectedCaseStudyProject] = useState<Project | null>(null);
   const [previewProject, setPreviewProject] = useState<Project | null>(null);
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
+  const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
+
+  const handleOpenResume = (resumeId?: string) => {
+    setSelectedResumeId(resumeId || null);
+    setResumeModalOpen(true);
+  };
 
   // Initialize data from Supabase on mount
   useEffect(() => {
@@ -129,11 +135,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0B1220] text-[#F8FAFC] font-sans selection:bg-[#2563EB] selection:text-white">
       {/* Sticky Navigation */}
-      <Navbar onOpenResumeModal={() => setResumeModalOpen(true)} />
+      <Navbar onOpenResumeModal={() => handleOpenResume()} />
 
       {/* Main Content Sections */}
       <main>
-        <Hero onOpenResumeModal={() => setResumeModalOpen(true)} />
+        <Hero onOpenResumeModal={() => handleOpenResume()} />
         <About />
         <Skills />
         <Projects onOpenCaseStudy={(proj) => setSelectedCaseStudyProject(proj)} />
@@ -141,7 +147,7 @@ export default function App() {
         <Experience />
         <Certifications onSelectCertificate={(cert) => setSelectedCertificate(cert)} />
         <Education />
-        <ResumeSection onOpenResumeModal={() => setResumeModalOpen(true)} />
+        <ResumeSection onOpenResumeModal={(resumeId) => handleOpenResume(resumeId)} />
         <Contact />
       </main>
 
@@ -169,7 +175,11 @@ export default function App() {
 
       <ResumeModal
         isOpen={resumeModalOpen}
-        onClose={() => setResumeModalOpen(false)}
+        selectedResumeId={selectedResumeId}
+        onClose={() => {
+          setResumeModalOpen(false);
+          setSelectedResumeId(null);
+        }}
       />
     </div>
   );
