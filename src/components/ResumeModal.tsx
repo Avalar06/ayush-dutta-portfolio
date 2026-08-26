@@ -15,7 +15,20 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
   const activeResume = portfolioData.resumes.find((r) => r.id === selectedTab) || portfolioData.resumes[0];
 
   const handleDownload = () => {
-    alert(`Downloading ${activeResume.title} (${activeResume.pdfPath}).`);
+    if (!activeResume.pdfPath) return;
+    const a = document.createElement('a');
+    a.href = activeResume.pdfPath.replace('/public/', '/');
+    a.target = '_blank';
+    a.download = `${activeResume.title.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleOpenNewTab = () => {
+    if (activeResume.pdfPath) {
+      window.open(activeResume.pdfPath.replace('/public/', '/'), '_blank', 'noopener,noreferrer');
+    }
   };
 
   return (
@@ -101,12 +114,18 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose }) => 
         {/* Modal Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-[#263449]">
           <span className="text-[11px] text-[#94A3B8] font-mono">File: {activeResume.pdfPath}</span>
-          <div className="flex space-x-3">
+          <div className="flex space-x-2 sm:space-x-3">
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg bg-[#151F2E] hover:bg-[#263449] text-[#94A3B8] text-xs font-medium transition-colors border border-[#263449]"
             >
               Close
+            </button>
+            <button
+              onClick={handleOpenNewTab}
+              className="inline-flex items-center space-x-1.5 bg-[#151F2E] hover:bg-[#263449] text-[#F8FAFC] font-medium px-3.5 py-2 rounded-lg transition-colors text-xs border border-[#263449]"
+            >
+              <span>Open in New Tab</span>
             </button>
             <button
               onClick={handleDownload}

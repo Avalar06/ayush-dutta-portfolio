@@ -8,7 +8,14 @@ interface ResumeSectionProps {
 
 export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal }) => {
   const handleDownload = (resumeTitle: string, path: string) => {
-    alert(`Downloading ${resumeTitle} (${path}). In production, this downloads the PDF.`);
+    if (!path) return;
+    const a = document.createElement('a');
+    a.href = path.replace('/public/', '/');
+    a.target = '_blank';
+    a.download = `${resumeTitle.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   return (

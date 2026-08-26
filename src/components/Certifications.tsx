@@ -1,13 +1,25 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, Award } from 'lucide-react';
-import { Certification, getPortfolioData } from '../data/portfolioData';
+import { Certification, getPortfolioData } from '../services/portfolioStorage';
 
 interface CertificationsProps {
   onSelectCertificate: (cert: Certification) => void;
 }
 
 export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertificate }) => {
-  const data = getPortfolioData();
+  const [data, setData] = useState(() => getPortfolioData());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setData({ ...getPortfolioData() });
+    };
+
+    window.addEventListener('portfolio_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('portfolio_updated', handleUpdate);
+    };
+  }, []);
+
   const publishedCerts = data.certifications.filter((c) => c.published !== false);
 
   return (
