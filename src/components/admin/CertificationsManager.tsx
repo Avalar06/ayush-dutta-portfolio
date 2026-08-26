@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Edit2, Trash2, Award, X, Upload } from 'lucide-react';
+import { Plus, Edit2, Trash2, Award, X, Upload, ExternalLink, FileText } from 'lucide-react';
 import { Certification, PortfolioDatabase, saveCertificationToSupabase, deleteCertificationFromSupabase, uploadFileToSupabase } from '../../services/portfolioStorage';
 
 interface CertificationsManagerProps {
@@ -24,7 +24,7 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
       duration: '',
       credentialId: '',
       verificationUrl: '',
-      pdfPlaceholder: '/public/resumes/Certificate.pdf',
+      pdfPlaceholder: '',
       published: true
     });
     setIsEditing(true);
@@ -41,13 +41,21 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate type: PDF or images
+    const validTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!validTypes.includes(file.type) && !/\.(pdf|jpg|jpeg|png|webp)$/i.test(file.name)) {
+      setError('Please upload a valid PDF document or image file (JPEG, PNG, WEBP).');
+      return;
+    }
+
     setUploading(true);
     setError('');
     try {
       const publicUrl = await uploadFileToSupabase(file, 'certificates');
       setCurrentCert(prev => prev ? ({ ...prev, pdfPlaceholder: publicUrl }) : null);
-    } catch (err: any) {
-      setError(err.message || 'Certificate upload failed');
+    } catch (err: unknown) {
+      const errObj = err as Error;
+      setError(errObj.message || 'Certificate upload failed');
     } finally {
       setUploading(false);
     }
@@ -68,7 +76,7 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
       duration: currentCert.duration || '',
       credentialId: currentCert.credentialId || '',
       verificationUrl: currentCert.verificationUrl || '',
-      pdfPlaceholder: currentCert.pdfPlaceholder || '/public/resumes/Certificate.pdf',
+      pdfPlaceholder: currentCert.pdfPlaceholder || '',
       published: currentCert.published !== false
     };
 
@@ -77,8 +85,9 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
       setIsEditing(false);
       setCurrentCert(null);
       onUpdate();
-    } catch (err: any) {
-      setError(err.message || 'Failed to save certification');
+    } catch (err: unknown) {
+      const errObj = err as Error;
+      setError(errObj.message || 'Failed to save certification');
     } finally {
       setLoading(false);
     }
@@ -91,8 +100,9 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
       await deleteCertificationFromSupabase(id);
       setDeleteConfirmId(null);
       onUpdate();
-    } catch (err: any) {
-      setError(err.message || 'Failed to delete certification');
+    } catch (err: unknown) {
+      const errObj = err as Error;
+      setError(errObj.message || 'Failed to delete certification');
     } finally {
       setLoading(false);
     }
@@ -128,6 +138,7 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
               <th className="p-4">Issuer</th>
               <th className="p-4">Date</th>
               <th className="p-4">Credential ID</th>
+              <th className="p-4">File / Proof</th>
               <th className="p-4 text-right">Actions</th>
             </tr>
           </thead>
@@ -138,16 +149,33 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
                 <td className="p-4 text-[#94A3B8]">{cert.issuer}</td>
                 <td className="p-4 font-mono">{cert.date}</td>
                 <td className="p-4 font-mono text-[#94A3B8]">{cert.credentialId || 'N/A'}</td>
+                <td className="p-4">
+                  {cert.pdfPlaceholder && cert.pdfPlaceholder !== '/public/resumes/Certificate.pdf' ? (
+                    <a
+                      href={cert.pdfPlaceholder}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1 text-[#2563EB] hover:underline font-mono text-[11px]"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      <span>View File</span>
+                    </a>
+                  ) : (
+                    <span className="text-[#94A3B8] text-[11px]">No file</span>
+                  )}
+                </td>
                 <td className="p-4 text-right space-x-2">
                   <button
                     onClick={() => handleOpenEdit(cert)}
                     className="p-1.5 bg-[#111827] hover:bg-[#263449] text-[#94A3B8] hover:text-[#F8FAFC] rounded border border-[#263449]"
+                    title="Edit Certification"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setDeleteConfirmId(cert.id)}
                     className="p-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-400 rounded border border-red-500/30"
+                    title="Delete Certification"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -257,18 +285,33 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
                   value={currentCert.verificationUrl || ''}
                   onChange={(e) => setCurrentCert({ ...currentCert, verificationUrl: e.target.value })}
                   className="w-full bg-[#151F2E] border border-[#263449] rounded-lg px-3 py-2 text-[#F8FAFC]"
+                  placeholder="https://..."
                 />
               </div>
 
               <div>
-                <label className="block text-[#94A3B8] uppercase font-mono mb-1">Upload Certificate PDF / Image</label>
+                <label className="block text-[#94A3B8] uppercase font-mono mb-1">Upload Certificate File (PDF / Image)</label>
                 <input
                   type="file"
-                  accept=".pdf,.png,.jpg,.jpeg"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp"
                   onChange={handleFileUpload}
                   className="w-full bg-[#151F2E] border border-[#263449] rounded-lg px-3 py-2 text-[#F8FAFC] file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:bg-[#2563EB] file:text-white"
                 />
-                {uploading && <p className="text-[10px] text-[#2563EB] mt-1">Uploading to Supabase Storage...</p>}
+                {uploading && <p className="text-[10px] text-[#2563EB] mt-1 font-mono">Uploading to Supabase Storage...</p>}
+                {currentCert.pdfPlaceholder && currentCert.pdfPlaceholder !== '/public/resumes/Certificate.pdf' && (
+                  <div className="mt-2 flex items-center justify-between bg-[#111827] p-2 rounded border border-[#263449]">
+                    <span className="text-[11px] text-[#94A3B8] truncate max-w-[280px]">File: {currentCert.pdfPlaceholder}</span>
+                    <a
+                      href={currentCert.pdfPlaceholder}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-[#2563EB] hover:underline font-mono inline-flex items-center space-x-1"
+                    >
+                      <span>Preview</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-[#263449]">
@@ -281,8 +324,8 @@ export const CertificationsManager: React.FC<CertificationsManagerProps> = ({ da
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-4 py-2 bg-[#2563EB] text-white font-semibold rounded-lg"
+                  disabled={loading || uploading}
+                  className="px-4 py-2 bg-[#2563EB] hover:bg-[#3B82F6] disabled:opacity-50 text-white font-semibold rounded-lg"
                 >
                   {loading ? 'Saving...' : 'Save Certification'}
                 </button>
