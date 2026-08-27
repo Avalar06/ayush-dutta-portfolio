@@ -165,11 +165,11 @@ create or replace function fn_is_admin()
 returns boolean as $$
 begin
   return exists (
-    select 1 from admin_users
+    select 1 from public.admin_users
     where user_id = auth.uid()
   );
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public, auth;
 
 -- ============================================================================
 -- 5. ROW LEVEL SECURITY (RLS) ENABLEMENT & POLICIES
@@ -301,10 +301,14 @@ begin
     raise exception 'Unauthorized: Admin privileges required';
   end if;
 
-  update resumes set published = false where id <> p_resume_id;
-  update resumes set published = true where id = p_resume_id;
+  update public.resumes set published = false where id <> p_resume_id;
+  update public.resumes set published = true where id = p_resume_id;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public, auth;
+
+-- Restrict direct execution to authenticated users only
+revoke execute on function public.set_published_resume(text) from public;
+grant execute on function public.set_published_resume(text) to authenticated;
 
 -- ============================================================================
 -- 6. INITIAL SEED DATA

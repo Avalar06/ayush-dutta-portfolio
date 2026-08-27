@@ -952,25 +952,83 @@ export const deleteResumeFromSupabase = async (id: string): Promise<void> => {
   await fetchPortfolioDataFromSupabase();
 };
 
-// Secure File Upload with Validation (Images, PDFs; rejecting executables)
+// Strict bucket validation rules for service-level security
+interface BucketValidationRule {
+  allowedExts: string[];
+  allowedMimes: string[];
+  description: string;
+}
+
+const BUCKET_RULES: Record<'projects' | 'certificates' | 'resumes' | 'profile', BucketValidationRule> = {
+  resumes: {
+    allowedExts: ['pdf'],
+    allowedMimes: ['application/pdf'],
+    description: 'PDF documents only (.pdf)'
+  },
+  certificates: {
+    allowedExts: ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+    allowedMimes: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+    description: 'PDF or image files (.pdf, .jpg, .jpeg, .png, .webp)'
+  },
+  projects: {
+    allowedExts: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    allowedMimes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    description: 'Image files only (.jpg, .jpeg, .png, .webp, .gif)'
+  },
+  profile: {
+    allowedExts: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    allowedMimes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    description: 'Image files only (.jpg, .jpeg, .png, .webp, .gif)'
+  }
+};
+
+// Secure File Upload with Strict Bucket-Specific Allowlist Validation
 export const uploadFileToSupabase = async (
   file: File,
   bucket: 'projects' | 'certificates' | 'resumes' | 'profile'
 ): Promise<string> => {
-  // Validate file size (max 10MB)
-  if (file.size > 10 * 1024 * 1024) {
-    throw new Error('File size exceeds 10MB limit.');
+  // Validate file presence and size (max 10MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
+  if (!file || file.size <= 0) {
+    throw new Error('Invalid file provided.');
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error('File size exceeds the 10MB limit.');
   }
 
-  // Validate file extension/type (reject executables and dangerous scripts)
-  const forbiddenExts = ['.exe', '.bat', '.cmd', '.js', '.sh', '.php', '.py', '.scr'];
-  const fileNameLower = file.name.toLowerCase();
-  if (forbiddenExts.some(ext => fileNameLower.endsWith(ext))) {
-    throw new Error('Executable or script files are strictly prohibited.');
+  // Retrieve bucket validation rule
+  const rule = BUCKET_RULES[bucket];
+  if (!rule) {
+    throw new Error(`Unsupported storage bucket: ${bucket}`);
   }
 
-  const fileExt = file.name.split('.').pop() || '';
-  const sanitizedName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+  // Validate extension
+  const rawParts = file.name.split('.');
+  if (rawParts.length < 2) {
+    throw new Error('Files must have a valid file extension.');
+  }
+  const rawExt = rawParts.pop()?.toLowerCase() || '';
+  const sanitizedExt = rawExt.replace(/[^a-z0-9]/g, '');
+
+  if (!sanitizedExt || !rule.allowedExts.includes(sanitizedExt)) {
+    throw new Error(`Invalid file type for ${bucket}. Required: ${rule.description}`);
+  }
+
+  // Validate MIME type against allowed list
+  const fileMime = file.type ? file.type.toLowerCase().trim() : '';
+  if (fileMime && !rule.allowedMimes.includes(fileMime)) {
+    throw new Error(`Invalid MIME type (${fileMime}) for ${bucket}. Required: ${rule.description}`);
+  }
+
+  // Verify consistency between extension and MIME family
+  if (sanitizedExt === 'pdf' && fileMime && fileMime !== 'application/pdf') {
+    throw new Error('File extension (.pdf) does not match MIME type.');
+  }
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(sanitizedExt) && fileMime && !fileMime.startsWith('image/')) {
+    throw new Error('Image file extension does not match image MIME type.');
+  }
+
+  const sanitizedName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${sanitizedExt}`;
   const filePath = `${sanitizedName}`;
 
   if (!isSupabaseConfigured()) {
@@ -982,7 +1040,10 @@ export const uploadFileToSupabase = async (
     .from(bucket)
     .upload(filePath, file, { upsert: true });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    console.error(`Error uploading file to bucket ${bucket}:`, uploadError);
+    throw new Error(uploadError.message || `Failed to upload file to ${bucket}.`);
+  }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
   return data.publicUrl;
