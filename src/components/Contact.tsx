@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2 } from 'lucide-react';
-import { portfolioData } from '../data/portfolioData';
+import React, { useState, useEffect } from 'react';
+import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2, Copy, Check, MessageSquare } from 'lucide-react';
+import { motion } from 'motion/react';
+import { getPortfolioData } from '../services/portfolioStorage';
 
 export const Contact: React.FC = () => {
+  const [data, setData] = useState(() => getPortfolioData());
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleUpdate = () => setData({ ...getPortfolioData() });
+    window.addEventListener('portfolio_updated', handleUpdate);
+    return () => window.removeEventListener('portfolio_updated', handleUpdate);
+  }, []);
+
+  const personal = data.personal;
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText(personal.email);
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) {
-      alert('Please fill out all required fields.');
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setError('Please fill in all required fields (Name, Email, and Message).');
       return;
     }
+    setError(null);
     setSubmitted(true);
     setTimeout(() => {
       setFormData({ name: '', email: '', subject: '', message: '' });
@@ -19,101 +38,142 @@ export const Contact: React.FC = () => {
   };
 
   return (
-    <section id="contact" className="py-20 bg-[#111827] border-b border-[#263449]">
+    <section id="contact" className="py-20 md:py-28 bg-[#111827] border-b border-[#263449] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mb-12">
-          <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#2563EB] bg-[#2563EB]/10 px-2.5 py-1 rounded">
-            GET IN TOUCH
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.45 }}
+          className="max-w-3xl mb-12"
+        >
+          <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#3B82F6] bg-[#2563EB]/10 border border-[#2563EB]/25 px-3 py-1 rounded-md">
+            COMMUNICATIONS CHANNEL
           </span>
-          <h2 className="text-3xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
-            Contact Ayush Dutta
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
+            Get in Touch with {personal.name}
           </h2>
           <p className="text-sm sm:text-base text-[#94A3B8]">
-            Open to opportunities in SOC analysis, cybersecurity, IT operations, and technology roles.
+            Open to opportunities in Security Operations (SOC), cybersecurity engineering, and applied systems security.
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Contact Details Card */}
-          <div className="bg-[#151F2E] border border-[#263449] rounded-xl p-6 sm:p-8 space-y-6">
-            <h3 className="text-base font-bold text-[#F8FAFC] border-b border-[#263449] pb-3">
-              Direct Contact
-            </h3>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45 }}
+            className="lg:col-span-5 bg-[#151F2E] border border-[#263449] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-[#263449] pb-4">
+              <h3 className="text-base font-bold text-[#F8FAFC] flex items-center space-x-2">
+                <Mail className="w-4 h-4 text-[#3B82F6]" />
+                <span>Direct Contact Channels</span>
+              </h3>
+              <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
+                ACTIVE
+              </span>
+            </div>
 
             <div className="space-y-4 text-sm">
-              <div>
-                <span className="text-xs uppercase tracking-wider text-[#94A3B8] block mb-1">Email</span>
-                <a
-                  href={`mailto:${portfolioData.personal.email}`}
-                  className="text-[#F8FAFC] hover:text-[#2563EB] font-mono text-xs transition-colors"
+              <div className="bg-[#111827] border border-[#263449] rounded-xl p-3.5 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8] block mb-0.5">Primary Email</span>
+                  <a
+                    href={`mailto:${personal.email}`}
+                    className="text-[#F8FAFC] hover:text-[#3B82F6] font-mono text-xs transition-colors block"
+                  >
+                    {personal.email}
+                  </a>
+                </div>
+                <button
+                  onClick={handleCopyEmail}
+                  className="p-2 bg-[#151F2E] hover:bg-[#2563EB]/20 text-[#94A3B8] hover:text-[#3B82F6] rounded-lg border border-[#263449] transition-colors"
+                  title="Copy email"
                 >
-                  {portfolioData.personal.email}
+                  {copiedEmail ? <Check className="w-3.5 h-3.5 text-[#10B981]" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="bg-[#111827] border border-[#263449] rounded-xl p-3.5">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8] block mb-0.5">Direct Line</span>
+                <a
+                  href={`tel:${personal.phone}`}
+                  className="text-[#F8FAFC] hover:text-[#3B82F6] font-mono text-xs transition-colors"
+                >
+                  {personal.phone}
                 </a>
               </div>
 
-              <div>
-                <span className="text-xs uppercase tracking-wider text-[#94A3B8] block mb-1">Phone</span>
-                <a
-                  href={`tel:${portfolioData.personal.phone}`}
-                  className="text-[#F8FAFC] hover:text-[#2563EB] font-mono text-xs transition-colors"
-                >
-                  {portfolioData.personal.phone}
-                </a>
-              </div>
-
-              <div>
-                <span className="text-xs uppercase tracking-wider text-[#94A3B8] block mb-1">Location</span>
-                <span className="text-[#F8FAFC] text-xs">
-                  {portfolioData.personal.location}
+              <div className="bg-[#111827] border border-[#263449] rounded-xl p-3.5">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8] block mb-0.5">Location</span>
+                <span className="text-[#F8FAFC] text-xs font-mono">
+                  {personal.location}
                 </span>
               </div>
 
-              <div>
-                <span className="text-xs uppercase tracking-wider text-[#94A3B8] block mb-1">LinkedIn</span>
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <a
-                  href={portfolioData.personal.linkedin}
+                  href={personal.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#F8FAFC] hover:text-[#2563EB] font-mono text-xs transition-colors"
+                  className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-xl p-3 flex items-center space-x-2.5 text-xs text-[#F8FAFC] hover:text-[#3B82F6] transition-colors"
                 >
-                  linkedin.com/in/ayushdutta
+                  <Linkedin className="w-4 h-4 text-[#3B82F6]" />
+                  <span>LinkedIn</span>
                 </a>
-              </div>
 
-              <div>
-                <span className="text-xs uppercase tracking-wider text-[#94A3B8] block mb-1">GitHub</span>
                 <a
-                  href={portfolioData.personal.github}
+                  href={personal.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#F8FAFC] hover:text-[#2563EB] font-mono text-xs transition-colors"
+                  className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-xl p-3 flex items-center space-x-2.5 text-xs text-[#F8FAFC] hover:text-[#3B82F6] transition-colors"
                 >
-                  GitHub Repository Placeholder
+                  <Github className="w-4 h-4 text-[#3B82F6]" />
+                  <span>GitHub</span>
                 </a>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Message Form */}
-          <div className="lg:col-span-2 bg-[#151F2E] border border-[#263449] rounded-xl p-6 sm:p-8">
-            <h3 className="text-base font-bold text-[#F8FAFC] border-b border-[#263449] pb-3 mb-6">
-              Send a Professional Inquiry
-            </h3>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ duration: 0.45 }}
+            className="lg:col-span-7 bg-[#151F2E] border border-[#263449] rounded-2xl p-6 sm:p-8 shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-[#263449] pb-4 mb-6">
+              <h3 className="text-base font-bold text-[#F8FAFC] flex items-center space-x-2">
+                <MessageSquare className="w-4 h-4 text-[#3B82F6]" />
+                <span>Send a Professional Inquiry</span>
+              </h3>
+              <span className="text-[11px] font-mono text-[#94A3B8]">Fast response</span>
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400 font-mono">
+                {error}
+              </div>
+            )}
 
             {submitted ? (
-              <div className="bg-[#10B981]/10 border border-[#10B981]/25 rounded-xl p-6 text-center space-y-3 my-8">
-                <div className="w-10 h-10 bg-[#10B981]/20 text-[#10B981] rounded-full flex items-center justify-center mx-auto">
-                  <CheckCircle2 className="w-5 h-5" />
+              <div className="bg-[#10B981]/10 border border-[#10B981]/25 rounded-2xl p-8 text-center space-y-3 my-4">
+                <div className="w-12 h-12 bg-[#10B981]/20 text-[#10B981] rounded-full flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-lg font-bold text-[#F8FAFC]">Message Sent Successfully</h4>
-                <p className="text-sm text-[#94A3B8] max-w-md mx-auto">
-                  Thank you for reaching out. Ayush will review your inquiry and respond at {portfolioData.personal.email}.
+                <h4 className="text-lg font-bold text-[#F8FAFC]">Message Transmitted Successfully</h4>
+                <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto leading-relaxed">
+                  Thank you for reaching out. Ayush will review your communication and respond shortly via {personal.email}.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-5 py-2 bg-[#111827] hover:bg-[#263449] text-[#F8FAFC] rounded-lg text-xs font-medium transition-colors border border-[#263449]"
+                  className="px-5 py-2.5 bg-[#111827] hover:bg-[#263449] text-[#F8FAFC] rounded-xl text-xs font-semibold transition-colors border border-[#263449] mt-2"
                 >
-                  Send Another
+                  Send Another Message
                 </button>
               </div>
             ) : (
@@ -129,7 +189,7 @@ export const Contact: React.FC = () => {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Recruiter or Hiring Manager"
-                      className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#2563EB] rounded-lg px-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
+                      className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -143,7 +203,7 @@ export const Contact: React.FC = () => {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="name@company.com"
-                      className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#2563EB] rounded-lg px-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
+                      className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -157,34 +217,36 @@ export const Contact: React.FC = () => {
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     placeholder="e.g. SOC Analyst / Security Engineer Role"
-                    className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#2563EB] rounded-lg px-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
+                    className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs uppercase tracking-wider text-[#94A3B8] mb-1.5 font-mono">
-                    Message *
+                    Message Details *
                   </label>
                   <textarea
                     rows={4}
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Details regarding role, interview, or opportunity..."
-                    className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#2563EB] rounded-lg px-3.5 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors resize-none"
+                    placeholder="Details regarding role requirements, interview scheduling, or collaboration..."
+                    className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors resize-none"
                   />
                 </div>
 
-                <button
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-medium py-2.5 px-5 rounded-lg transition-colors text-xs shadow-sm"
+                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-semibold py-3 px-5 rounded-xl transition-colors text-xs shadow-sm shadow-[#2563EB]/25"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Send Message</span>
-                </button>
+                  <Send className="w-4 h-4" />
+                  <span>Transmit Inquiry</span>
+                </motion.button>
               </form>
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

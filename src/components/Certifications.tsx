@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ExternalLink, Award } from 'lucide-react';
+import { ExternalLink, Award, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { motion } from 'motion/react';
 import { Certification, getPortfolioData } from '../services/portfolioStorage';
 
 interface CertificationsProps {
@@ -23,55 +24,111 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
   const publishedCerts = data.certifications.filter((c) => c.published !== false);
 
   return (
-    <section id="certifications" className="py-20 bg-[#0B1220] border-b border-[#263449]">
+    <section id="certifications" className="py-20 md:py-28 bg-[#0B1220] border-b border-[#263449] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl mb-12">
-          <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#2563EB] bg-[#2563EB]/10 px-2.5 py-1 rounded">
-            CREDENTIALS & BADGES
-          </span>
-          <h2 className="text-3xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
-            Certifications
-          </h2>
-          <p className="text-sm sm:text-base text-[#94A3B8]">
-            Verified professional credentials in cybersecurity, data science, and technical innovation.
-          </p>
-        </div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={{
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08 }
+            }
+          }}
+          className="max-w-3xl mb-12"
+        >
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }
+            }}
+            className="flex items-center space-x-3 mb-3"
+          >
+            <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
+              04 // VERIFIED CREDENTIALS
+            </span>
+            <span className="h-px w-8 bg-[#263449]" />
+            <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
+              ACCREDITED CERTIFICATIONS
+            </span>
+          </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {publishedCerts.map((cert) => (
-            <div
-              key={cert.id}
-              className="bg-[#111827] border border-[#263449] rounded-xl p-6 flex flex-col justify-between"
+          <motion.h2 
+            variants={{
+              hidden: { opacity: 0, y: 12 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+            }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F8FAFC] tracking-tight mb-3"
+          >
+            Certifications &amp; Badges
+          </motion.h2>
+
+          <motion.p 
+            variants={{
+              hidden: { opacity: 0, y: 12 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+            }}
+            className="text-sm sm:text-base text-[#94A3B8] leading-relaxed max-w-2xl"
+          >
+            Verified technical credentials in cybersecurity fundamentals, data science, and security intelligence.
+          </motion.p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {publishedCerts.map((cert, idx) => (
+            <motion.div
+              key={cert.id || idx}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.15 }}
+              transition={{ duration: 0.4, delay: idx * 0.06 }}
+              className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-2xl p-6 flex flex-col justify-between transition-colors shadow-sm relative group overflow-hidden"
             >
+              {/* Top Accent Ribbon */}
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#10B981]/50 via-[#3B82F6]/30 to-transparent" />
+
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded flex items-center space-x-1">
-                    <Award className="w-3 h-3 inline mr-1" /> VERIFIED
+                {/* Header Badge */}
+                <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#263449]/70">
+                  <span className="text-[11px] font-mono text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/25 px-2.5 py-1 rounded-full flex items-center space-x-1.5 font-semibold">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <span>VERIFIED RECORD</span>
                   </span>
-                  <span className="text-[10px] font-mono text-[#94A3B8]">{cert.date}</span>
+                  <span className="text-[11px] font-mono text-[#94A3B8]">
+                    {cert.date}
+                  </span>
                 </div>
 
-                <h3 className="text-base font-bold text-[#F8FAFC] mb-2 leading-snug">
+                <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC] mb-2 leading-snug group-hover:text-[#3B82F6] transition-colors">
                   {cert.title}
                 </h3>
-                <span className="text-[#2563EB] text-xs font-mono block mb-4">
-                  {cert.issuer}
-                </span>
+                
+                <div className="flex items-center space-x-1.5 text-[#3B82F6] text-xs font-mono font-medium mb-2">
+                  <Award className="w-3.5 h-3.5 shrink-0" />
+                  <span>{cert.issuer}</span>
+                </div>
+
                 {cert.duration && (
-                  <span className="text-[#94A3B8] text-xs block mb-4">Duration: {cert.duration}</span>
+                  <span className="text-[#94A3B8] text-xs font-mono block mb-4">
+                    Program Duration: {cert.duration}
+                  </span>
                 )}
               </div>
 
-              <div className="border-t border-[#263449] pt-4">
-                <button
+              <div className="border-t border-[#263449]/80 pt-4 mt-4">
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => onSelectCertificate(cert)}
-                  className="w-full flex items-center justify-center space-x-2 bg-[#151F2E] hover:bg-[#2563EB] text-[#F8FAFC] text-xs font-medium py-2 rounded-lg transition-colors border border-[#263449]"
+                  className="w-full flex items-center justify-center space-x-2 bg-[#151F2E] hover:bg-[#2563EB] text-[#F8FAFC] text-xs font-semibold py-2.5 rounded-xl transition-colors border border-[#263449] hover:border-[#2563EB] shadow-sm focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                 >
-                  <span>View Certificate</span>
+                  <span>Preview Credential</span>
                   <ExternalLink className="w-3.5 h-3.5" />
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
