@@ -37,8 +37,14 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selec
       } else {
         setActiveId(null);
       }
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') onClose();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen, selectedResumeId, publishedResumes.length]);
+  }, [isOpen, selectedResumeId, publishedResumes.length, onClose]);
 
   const activeResume: ResumeItem | undefined = publishedResumes.find(r => r.id === activeId) || publishedResumes[0];
 

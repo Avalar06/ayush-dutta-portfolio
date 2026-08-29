@@ -76,59 +76,73 @@ export const Skills: React.FC = () => {
           </motion.p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data.skills.map((category, idx) => (
-            <motion.div
-              key={category.id || idx}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.4, delay: idx * 0.06 }}
-              className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/40 rounded-2xl p-6 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden group"
-            >
-              {/* Subtle top domain accent indicator */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#2563EB]/40 via-[#3B82F6]/20 to-transparent" />
+        {data.skills.length === 0 ? (
+          <div className="bg-[#111827] border border-[#263449] rounded-2xl p-12 text-center text-[#94A3B8] max-w-2xl mx-auto">
+            <Cpu className="w-10 h-10 text-[#94A3B8] mx-auto mb-3 opacity-60" />
+            <h3 className="text-base font-bold text-[#F8FAFC] mb-1">Skills inventory will be added soon.</h3>
+            <p className="text-xs text-[#94A3B8] leading-relaxed">
+              Technical tools, frameworks, and domains will appear here once configured.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {data.skills.map((category, idx) => (
+              <motion.div
+                key={category.id || idx}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.15 }}
+                transition={{ duration: 0.4, delay: Math.min(idx * 0.05, 0.25) }}
+                className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/40 rounded-2xl p-6 flex flex-col justify-between transition-colors shadow-sm relative overflow-hidden group"
+              >
+                {/* Subtle top domain accent indicator */}
+                <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#2563EB]/40 via-[#3B82F6]/20 to-transparent" />
 
-              <div>
-                {/* Domain Header */}
-                <div className="flex items-center justify-between mb-3.5 pb-3.5 border-b border-[#263449]/70">
-                  <div className="flex items-center space-x-2.5">
-                    <div className="p-2 bg-[#151F2E] rounded-xl border border-[#263449] group-hover:border-[#3B82F6]/40 transition-colors">
-                      {getCategoryIcon(idx)}
+                <div>
+                  {/* Domain Header */}
+                  <div className="flex items-center justify-between mb-3.5 pb-3.5 border-b border-[#263449]/70">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="p-2 bg-[#151F2E] rounded-xl border border-[#263449] group-hover:border-[#3B82F6]/40 transition-colors">
+                        {getCategoryIcon(idx)}
+                      </div>
+                      <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">
+                        {category.title}
+                      </h3>
                     </div>
-                    <h3 className="text-base font-bold text-[#F8FAFC] tracking-tight">
-                      {category.title}
-                    </h3>
+                    <span className="text-[10px] font-mono font-medium text-[#94A3B8] bg-[#151F2E] px-2.5 py-1 rounded-md border border-[#263449]">
+                      {(category.skills || []).length} Tools
+                    </span>
                   </div>
-                  <span className="text-[10px] font-mono font-medium text-[#94A3B8] bg-[#151F2E] px-2.5 py-1 rounded-md border border-[#263449]">
-                    {category.skills.length} Tools
-                  </span>
-                </div>
 
-                <p className="text-[#94A3B8] text-xs mb-5 font-normal leading-relaxed">
-                  {category.description}
-                </p>
+                  {category.description && (
+                    <p className="text-[#94A3B8] text-xs mb-5 font-normal leading-relaxed">
+                      {category.description}
+                    </p>
+                  )}
 
-                {/* Technical Tool Matrix */}
-                <div className="pt-1">
-                  <span className="text-[10px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-2.5">
-                    Core Stack &amp; Tooling
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {category.skills.map((skill, sIdx) => (
-                      <span
-                        key={sIdx}
-                        className="bg-[#151F2E] border border-[#263449] hover:border-[#3B82F6]/50 hover:text-[#F8FAFC] text-[#CBD5E1] text-xs px-2.5 py-1 rounded-lg font-mono transition-colors"
-                      >
-                        {skill}
+                  {/* Technical Tool Matrix */}
+                  {category.skills && category.skills.length > 0 && (
+                    <div className="pt-1">
+                      <span className="text-[10px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-2.5">
+                        Core Stack &amp; Tooling
                       </span>
-                    ))}
-                  </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {category.skills.map((skill, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="bg-[#151F2E] border border-[#263449] hover:border-[#3B82F6]/50 hover:text-[#F8FAFC] text-[#CBD5E1] text-xs px-2.5 py-1 rounded-lg font-mono transition-colors"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -135,7 +135,7 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.4, delay: idx * 0.08 }}
+                  transition={{ duration: 0.4, delay: Math.min(idx * 0.06, 0.25) }}
                   className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-colors shadow-sm relative group overflow-hidden"
                 >
                   {/* Top Subtle Accent Ribbon */}

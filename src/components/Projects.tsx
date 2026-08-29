@@ -22,14 +22,27 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
   // Filter only published projects for public view
   const publishedProjects = data.projects.filter((p) => p.published !== false);
 
-  const categories = ['All', 'Cybersecurity', 'AI / ML', 'Web', 'Data', 'Other'];
+  // Dynamically aggregate categories from published projects while maintaining preferred order
+  const categories = Array.from(
+    new Set([
+      'All',
+      'Cybersecurity',
+      'AI / ML',
+      'Web',
+      'Data',
+      ...publishedProjects.map((p) => p.category).filter((c): c is string => Boolean(c))
+    ])
+  );
 
   const filteredProjects = publishedProjects.filter((p) => {
     const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
+    const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.technologies.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      !searchQuery ||
+      p.title.toLowerCase().includes(searchLower) ||
+      (p.description && p.description.toLowerCase().includes(searchLower)) ||
+      (p.technologies && p.technologies.some(t => t.toLowerCase().includes(searchLower))) ||
+      (p.category && p.category.toLowerCase().includes(searchLower));
     return matchesCat && matchesSearch;
   });
 
@@ -243,7 +256,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                           }`}
                         >
                           <div className="text-[10px] font-mono text-[#3B82F6] font-bold mb-1">
-                            0{idx + 1}
+                            {String(idx + 1).padStart(2, '0')}
                           </div>
                           <div className="font-semibold text-[#F8FAFC] mb-1 text-xs">{step.step}</div>
                           <p className="text-[11px] text-[#94A3B8] leading-snug line-clamp-2">{step.description}</p>
@@ -255,26 +268,28 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
 
                 {/* Key Controls & Applied Stack */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-[#263449]">
-                  <div>
-                    <span className="text-[11px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-3">
-                      Key Capabilities &amp; Security Controls
-                    </span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {flagshipProject.capabilities.slice(0, 8).map((cap, idx) => (
-                        <div key={idx} className="flex items-center space-x-2 text-xs text-[#E2E8F0]">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
-                          <span>{cap}</span>
-                        </div>
-                      ))}
+                  {flagshipProject.capabilities && flagshipProject.capabilities.length > 0 && (
+                    <div>
+                      <span className="text-[11px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-3">
+                        Key Capabilities &amp; Security Controls
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {flagshipProject.capabilities.map((cap, idx) => (
+                          <div key={idx} className="flex items-center space-x-2 text-xs text-[#E2E8F0]">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#10B981] shrink-0" />
+                            <span>{cap}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   <div>
                     <span className="text-[11px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-3">
                       Applied Technology Stack
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {flagshipProject.technologies.map((tech, idx) => (
+                      {(flagshipProject.technologies || []).map((tech, idx) => (
                         <span
                           key={idx}
                           className="bg-[#111827] text-[#CBD5E1] text-xs px-2.5 py-1 rounded-lg font-mono border border-[#263449]"
@@ -296,17 +311,19 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.4, delay: pIdx * 0.05 }}
+                  transition={{ duration: 0.4, delay: Math.min(pIdx * 0.04, 0.25) }}
                   className="bg-[#151F2E] border border-[#263449] hover:border-[#3B82F6]/40 rounded-2xl p-6 sm:p-7 flex flex-col justify-between transition-colors shadow-sm relative group overflow-hidden"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-3.5">
                       <span className="text-xs font-mono font-semibold text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/25 px-2.5 py-0.5 rounded-full">
-                        {project.label}
+                        {project.label || 'Project'}
                       </span>
-                      <span className="text-[10px] font-mono bg-[#111827] text-[#94A3B8] px-2 py-0.5 rounded border border-[#263449]">
-                        {project.status}
-                      </span>
+                      {project.status && (
+                        <span className="text-[10px] font-mono bg-[#111827] text-[#94A3B8] px-2 py-0.5 rounded border border-[#263449]">
+                          {project.status}
+                        </span>
+                      )}
                     </div>
 
                     <h3 className="text-xl font-bold text-[#F8FAFC] mb-2.5 group-hover:text-[#3B82F6] transition-colors">
@@ -316,21 +333,23 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                       {project.description}
                     </p>
 
-                    <div className="mb-5">
-                      <span className="text-[10px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-2">
-                        Technologies
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {project.technologies.map((tech, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-[#111827] text-[#CBD5E1] text-xs px-2 py-0.5 rounded-md font-mono border border-[#263449]"
-                          >
-                            {tech}
-                          </span>
-                        ))}
+                    {project.technologies && project.technologies.length > 0 && (
+                      <div className="mb-5">
+                        <span className="text-[10px] font-mono font-semibold text-[#64748B] uppercase tracking-wider block mb-2">
+                          Technologies
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {project.technologies.map((tech, idx) => (
+                            <span
+                              key={idx}
+                              className="bg-[#111827] text-[#CBD5E1] text-xs px-2 py-0.5 rounded-md font-mono border border-[#263449]"
+                            >
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className="pt-4 border-t border-[#263449]/70 flex items-center justify-between gap-3">

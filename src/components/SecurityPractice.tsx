@@ -49,7 +49,7 @@ export const SecurityPractice: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.15 }}
-              transition={{ duration: 0.4, delay: idx * 0.08 }}
+              transition={{ duration: 0.4, delay: Math.min(idx * 0.06, 0.25) }}
               whileHover={{ y: -4 }}
               className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-2xl p-6 flex flex-col justify-between transition-colors shadow-sm"
             >
@@ -59,7 +59,7 @@ export const SecurityPractice: React.FC = () => {
                     {getPracticeIcon(idx)}
                   </div>
                   <span className="text-[10px] font-mono text-[#3B82F6] font-semibold bg-[#2563EB]/10 px-2 py-0.5 rounded border border-[#2563EB]/20">
-                    0{idx + 1} // PRACTICE
+                    {String(idx + 1).padStart(2, '0')} // PRACTICE
                   </span>
                 </div>
 

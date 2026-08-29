@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Award, FileText, Download, ExternalLink, AlertCircle, Loader2, CheckCircle2, ShieldCheck, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Certification } from '../services/portfolioStorage';
@@ -13,6 +13,15 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({ certificate,
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!certificate) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [certificate, onClose]);
 
   const rawFileUrl = certificate?.pdfPlaceholder?.trim() || '';
 
