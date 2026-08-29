@@ -1,28 +1,28 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  FileText, 
-  X, 
-  Upload, 
-  ExternalLink, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Eye, 
-  Download, 
-  Loader2, 
-  AlertCircle, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  FileText,
+  X,
+  Upload,
+  ExternalLink,
+  CheckCircle2,
+  ShieldCheck,
+  Eye,
+  Download,
+  Loader2,
+  AlertCircle,
   AlertTriangle,
   Radio
 } from 'lucide-react';
-import { 
-  ResumeItem, 
-  PortfolioDatabase, 
-  saveResumeToSupabase, 
-  deleteResumeFromSupabase, 
+import {
+  ResumeItem,
+  PortfolioDatabase,
+  saveResumeToSupabase,
+  deleteResumeFromSupabase,
   setPublishedResumeInSupabase,
-  uploadFileToSupabase 
+  uploadFileToSupabase
 } from '../../services/portfolioStorage';
 
 interface ResumeManagerProps {
@@ -272,8 +272,8 @@ export const ResumeManager: React.FC<ResumeManagerProps> = ({ data, onUpdate }) 
                 {resumes.map((resume) => {
                   const isPublished = Boolean(resume.published);
                   return (
-                    <tr 
-                      key={resume.id} 
+                    <tr
+                      key={resume.id}
                       className={`hover:bg-[#1C283B] transition-colors ${
                         isPublished ? 'bg-[#10B981]/5' : ''
                       }`}
@@ -557,11 +557,11 @@ export const ResumeManager: React.FC<ResumeManagerProps> = ({ data, onUpdate }) 
 
       {/* In-Browser PDF Preview Modal */}
       {previewResume && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-sm animate-fadeIn"
           onClick={() => setPreviewResume(null)}
         >
-          <div 
+          <div
             className="relative w-full max-w-4xl bg-[#111827] border border-[#263449] rounded-xl shadow-2xl p-5 my-auto max-h-[95vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >

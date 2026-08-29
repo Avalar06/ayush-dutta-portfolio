@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
@@ -12,15 +12,18 @@ import { ResumeSection } from './components/ResumeSection';
 import { Contact } from './components/Contact';
 import { Footer } from './components/Footer';
 
-import { CertificateModal } from './components/CertificateModal';
-import { CaseStudyModal } from './components/CaseStudyModal';
-import { ResumeModal } from './components/ResumeModal';
 import { Certification, Project, fetchPortfolioDataFromSupabase, verifyAdminUser } from './services/portfolioStorage';
 import { supabase } from './lib/supabase';
 
-import { AdminLogin } from './components/admin/AdminLogin';
-import { AdminLayout } from './components/admin/AdminLayout';
-import { ResetPassword } from './components/admin/ResetPassword';
+// Lazy-loaded Modal components
+const CertificateModal = lazy(() => import('./components/CertificateModal').then(m => ({ default: m.CertificateModal })));
+const CaseStudyModal = lazy(() => import('./components/CaseStudyModal').then(m => ({ default: m.CaseStudyModal })));
+const ResumeModal = lazy(() => import('./components/ResumeModal').then(m => ({ default: m.ResumeModal })));
+
+// Lazy-loaded Admin and Auth components
+const AdminLogin = lazy(() => import('./components/admin/AdminLogin').then(m => ({ default: m.AdminLogin })));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout').then(m => ({ default: m.AdminLayout })));
+const ResetPassword = lazy(() => import('./components/admin/ResetPassword').then(m => ({ default: m.ResetPassword })));
 
 export default function App() {
   const [isAdminRoute, setIsAdminRoute] = useState(false);
@@ -90,12 +93,14 @@ export default function App() {
 
   if (isResetPasswordRoute) {
     return (
-      <ResetPassword
-        onSuccess={() => {
-          window.location.hash = '';
-          window.location.pathname = '/admin';
-        }}
-      />
+      <Suspense fallback={<div className="min-h-screen bg-[#0B1220] flex items-center justify-center text-[#94A3B8] font-mono text-xs">Loading secure reset portal...</div>}>
+        <ResetPassword
+          onSuccess={() => {
+            window.location.hash = '';
+            window.location.pathname = '/admin';
+          }}
+        />
+      </Suspense>
     );
   }
 
@@ -111,24 +116,28 @@ export default function App() {
 
     if (!isAdminAuth) {
       return (
-        <AdminLogin
-          onLoginSuccess={async () => {
-            const authorized = await verifyAdminUser();
-            setIsAdminAuth(authorized);
-          }}
-        />
+        <Suspense fallback={<div className="min-h-screen bg-[#0B1220] flex items-center justify-center text-[#94A3B8] font-mono text-xs">Loading admin portal...</div>}>
+          <AdminLogin
+            onLoginSuccess={async () => {
+              const authorized = await verifyAdminUser();
+              setIsAdminAuth(authorized);
+            }}
+          />
+        </Suspense>
       );
     }
     return (
-      <AdminLayout
-        onLogout={async () => {
-          await supabase.auth.signOut();
-          setIsAdminAuth(false);
-          window.history.pushState({}, '', '/');
-          window.dispatchEvent(new PopStateEvent('popstate'));
-        }}
-        onPreviewProjectModal={(proj) => setPreviewProject(proj)}
-      />
+      <Suspense fallback={<div className="min-h-screen bg-[#0B1220] flex items-center justify-center text-[#94A3B8] font-mono text-xs">Loading admin workspace...</div>}>
+        <AdminLayout
+          onLogout={async () => {
+            await supabase.auth.signOut();
+            setIsAdminAuth(false);
+            window.history.pushState({}, '', '/');
+            window.dispatchEvent(new PopStateEvent('popstate'));
+          }}
+          onPreviewProjectModal={(proj) => setPreviewProject(proj)}
+        />
+      </Suspense>
     );
   }
 
@@ -154,33 +163,35 @@ export default function App() {
       {/* Footer */}
       <Footer />
 
-      {/* Modals */}
-      <CertificateModal
-        certificate={selectedCertificate}
-        onClose={() => setSelectedCertificate(null)}
-      />
-
-      <CaseStudyModal
-        project={selectedCaseStudyProject}
-        onClose={() => setSelectedCaseStudyProject(null)}
-      />
-
-      {/* Preview modal triggered from Admin if needed */}
-      {previewProject && (
-        <CaseStudyModal
-          project={previewProject}
-          onClose={() => setPreviewProject(null)}
+      {/* Lazy Modals with Suspense */}
+      <Suspense fallback={null}>
+        <CertificateModal
+          certificate={selectedCertificate}
+          onClose={() => setSelectedCertificate(null)}
         />
-      )}
 
-      <ResumeModal
-        isOpen={resumeModalOpen}
-        selectedResumeId={selectedResumeId}
-        onClose={() => {
-          setResumeModalOpen(false);
-          setSelectedResumeId(null);
-        }}
-      />
+        <CaseStudyModal
+          project={selectedCaseStudyProject}
+          onClose={() => setSelectedCaseStudyProject(null)}
+        />
+
+        {/* Preview modal triggered from Admin if needed */}
+        {previewProject && (
+          <CaseStudyModal
+            project={previewProject}
+            onClose={() => setPreviewProject(null)}
+          />
+        )}
+
+        <ResumeModal
+          isOpen={resumeModalOpen}
+          selectedResumeId={selectedResumeId}
+          onClose={() => {
+            setResumeModalOpen(false);
+            setSelectedResumeId(null);
+          }}
+        />
+      </Suspense>
     </div>
   );
 }

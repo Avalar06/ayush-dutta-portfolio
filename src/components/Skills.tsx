@@ -39,7 +39,7 @@ export const Skills: React.FC = () => {
           }}
           className="max-w-3xl mb-12"
         >
-          <motion.div 
+          <motion.div
             variants={{
               hidden: { opacity: 0, y: 8 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }
@@ -55,7 +55,7 @@ export const Skills: React.FC = () => {
             </span>
           </motion.div>
 
-          <motion.h2 
+          <motion.h2
             variants={{
               hidden: { opacity: 0, y: 12 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
@@ -65,7 +65,7 @@ export const Skills: React.FC = () => {
             Skills &amp; Technical Stack
           </motion.h2>
 
-          <motion.p 
+          <motion.p
             variants={{
               hidden: { opacity: 0, y: 12 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }

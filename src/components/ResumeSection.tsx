@@ -85,7 +85,7 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
           transition={{ duration: 0.45 }}
           className="max-w-3xl mb-12"
         >
-          <motion.div 
+          <motion.div
             variants={{
               hidden: { opacity: 0, y: 8 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }

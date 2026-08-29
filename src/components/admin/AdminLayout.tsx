@@ -1,47 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Shield, 
-  LayoutDashboard, 
-  FolderKanban, 
-  Award, 
-  Briefcase, 
-  GraduationCap, 
-  FileText, 
-  Settings, 
-  LogOut, 
-  ExternalLink, 
-  Menu, 
+import React, { useState, useEffect, Suspense, lazy } from 'react';
+import {
+  Shield,
+  LayoutDashboard,
+  FolderKanban,
+  Award,
+  Briefcase,
+  GraduationCap,
+  FileText,
+  Settings,
+  LogOut,
+  ExternalLink,
+  Menu,
   X,
   Wrench,
   ChevronRight,
-  UserCheck
+  UserCheck,
+  Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PortfolioDatabase, getPortfolioData, Project } from '../../services/portfolioStorage';
-import { AdminDashboardView } from './AdminDashboardView';
-import { ProjectsManager } from './ProjectsManager';
-import { CertificationsManager } from './CertificationsManager';
-import { ExperienceManager } from './ExperienceManager';
-import { SkillsManager } from './SkillsManager';
-import { EducationManager } from './EducationManager';
-import { SecurityPracticesManager } from './SecurityPracticesManager';
-import { ResumeManager } from './ResumeManager';
-import { SiteSettingsManager } from './SiteSettingsManager';
+
+// Lazy-loaded Admin Manager components
+const AdminDashboardView = lazy(() => import('./AdminDashboardView').then(m => ({ default: m.AdminDashboardView })));
+const ProjectsManager = lazy(() => import('./ProjectsManager').then(m => ({ default: m.ProjectsManager })));
+const CertificationsManager = lazy(() => import('./CertificationsManager').then(m => ({ default: m.CertificationsManager })));
+const ExperienceManager = lazy(() => import('./ExperienceManager').then(m => ({ default: m.ExperienceManager })));
+const SkillsManager = lazy(() => import('./SkillsManager').then(m => ({ default: m.SkillsManager })));
+const EducationManager = lazy(() => import('./EducationManager').then(m => ({ default: m.EducationManager })));
+const SecurityPracticesManager = lazy(() => import('./SecurityPracticesManager').then(m => ({ default: m.SecurityPracticesManager })));
+const ResumeManager = lazy(() => import('./ResumeManager').then(m => ({ default: m.ResumeManager })));
+const SiteSettingsManager = lazy(() => import('./SiteSettingsManager').then(m => ({ default: m.SiteSettingsManager })));
 
 interface AdminLayoutProps {
   onLogout: () => void;
   onPreviewProjectModal: (proj: Project) => void;
 }
 
-export type AdminTab = 
-  | 'dashboard' 
-  | 'projects' 
-  | 'experience' 
-  | 'skills' 
-  | 'certifications' 
-  | 'education' 
-  | 'security' 
-  | 'resume' 
+export type AdminTab =
+  | 'dashboard'
+  | 'projects'
+  | 'experience'
+  | 'skills'
+  | 'certifications'
+  | 'education'
+  | 'security'
+  | 'resume'
   | 'settings';
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onPreviewProjectModal }) => {
@@ -306,37 +309,44 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onLogout, onPreviewPro
 
         {/* Tab Content Rendering */}
         <div className="max-w-6xl mx-auto">
-          {activeTab === 'dashboard' && (
-            <AdminDashboardView data={data} onNavigateTab={(tab) => setActiveTab(tab as AdminTab)} />
-          )}
-          {activeTab === 'projects' && (
-            <ProjectsManager 
-              data={data} 
-              onUpdate={refreshData} 
-              onPreviewProject={(proj) => onPreviewProjectModal(proj)} 
-            />
-          )}
-          {activeTab === 'experience' && (
-            <ExperienceManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'skills' && (
-            <SkillsManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'certifications' && (
-            <CertificationsManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'education' && (
-            <EducationManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'security' && (
-            <SecurityPracticesManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'resume' && (
-            <ResumeManager data={data} onUpdate={refreshData} />
-          )}
-          {activeTab === 'settings' && (
-            <SiteSettingsManager data={data} onUpdate={refreshData} />
-          )}
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-20 text-[#94A3B8] font-mono text-xs">
+              <Loader2 className="w-5 h-5 animate-spin text-[#2563EB] mr-2.5" />
+              <span>Loading management console...</span>
+            </div>
+          }>
+            {activeTab === 'dashboard' && (
+              <AdminDashboardView data={data} onNavigateTab={(tab) => setActiveTab(tab as AdminTab)} />
+            )}
+            {activeTab === 'projects' && (
+              <ProjectsManager
+                data={data}
+                onUpdate={refreshData}
+                onPreviewProject={(proj) => onPreviewProjectModal(proj)}
+              />
+            )}
+            {activeTab === 'experience' && (
+              <ExperienceManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'skills' && (
+              <SkillsManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'certifications' && (
+              <CertificationsManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'education' && (
+              <EducationManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'security' && (
+              <SecurityPracticesManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'resume' && (
+              <ResumeManager data={data} onUpdate={refreshData} />
+            )}
+            {activeTab === 'settings' && (
+              <SiteSettingsManager data={data} onUpdate={refreshData} />
+            )}
+          </Suspense>
         </div>
       </main>
     </div>

@@ -39,7 +39,7 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
           }}
           className="max-w-3xl mb-12"
         >
-          <motion.div 
+          <motion.div
             variants={{
               hidden: { opacity: 0, y: 8 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }
@@ -55,7 +55,7 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
             </span>
           </motion.div>
 
-          <motion.h2 
+          <motion.h2
             variants={{
               hidden: { opacity: 0, y: 12 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
@@ -65,7 +65,7 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
             Certifications &amp; Badges
           </motion.h2>
 
-          <motion.p 
+          <motion.p
             variants={{
               hidden: { opacity: 0, y: 12 },
               visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
@@ -115,7 +115,7 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
                   <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC] mb-2 leading-snug group-hover:text-[#3B82F6] transition-colors break-words">
                     {cert.title}
                   </h3>
-                  
+
                   {cert.issuer && (
                     <div className="flex items-center space-x-1.5 text-[#3B82F6] text-xs font-mono font-medium mb-2">
                       <Award className="w-3.5 h-3.5 shrink-0" />

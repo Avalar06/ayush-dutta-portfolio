@@ -1,14 +1,14 @@
 import React from 'react';
-import { 
-  Shield, 
-  FolderKanban, 
-  Award, 
-  GraduationCap, 
-  Briefcase, 
-  FileText, 
-  Wrench, 
-  CheckCircle2, 
-  Lock, 
+import {
+  Shield,
+  FolderKanban,
+  Award,
+  GraduationCap,
+  Briefcase,
+  FileText,
+  Wrench,
+  CheckCircle2,
+  Lock,
   FileCheck,
   Settings,
   ArrowRight,
@@ -52,7 +52,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Projects Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('projects')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -71,7 +71,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Certifications Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('certifications')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -89,7 +89,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Experience Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('experience')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -107,7 +107,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Skills Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('skills')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -125,7 +125,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Education Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('education')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -143,7 +143,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Security Practices Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('security')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -161,7 +161,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Resumes Card */}
-        <div 
+        <div
           onClick={() => onNavigateTab('resume')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
@@ -179,7 +179,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ data, on
         </div>
 
         {/* Site Settings & Config */}
-        <div 
+        <div
           onClick={() => onNavigateTab('settings')}
           className="bg-[#111827] border border-[#263449] hover:border-[#2563EB] rounded-xl p-5 cursor-pointer transition-all hover:bg-[#151F2E] shadow-sm group"
         >
