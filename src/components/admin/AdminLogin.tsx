@@ -237,7 +237,15 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess }) => {
         )}
 
         <div className="mt-6 pt-6 border-t border-[#263449] text-center">
-          <a href="/" className="text-xs text-[#94A3B8] hover:text-[#F8FAFC] transition-colors">
+          <a
+            href="/"
+            onClick={(e) => {
+              e.preventDefault();
+              window.history.pushState({}, '', '/');
+              window.dispatchEvent(new PopStateEvent('popstate'));
+            }}
+            className="text-xs text-[#94A3B8] hover:text-[#F8FAFC] transition-colors"
+          >
             ← Return to Public Portfolio
           </a>
         </div>

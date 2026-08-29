@@ -810,6 +810,62 @@ export const deleteEducationFromSupabase = async (id: string): Promise<void> => 
   await fetchPortfolioDataFromSupabase();
 };
 
+export const saveSkillCategoryToSupabase = async (skillCategory: SkillCategory): Promise<void> => {
+  if (!isSupabaseConfigured()) {
+    const idx = cachedPortfolioData.skills.findIndex(s => s.id === skillCategory.id);
+    if (idx >= 0) cachedPortfolioData.skills[idx] = skillCategory;
+    else cachedPortfolioData.skills.push(skillCategory);
+    window.dispatchEvent(new Event('portfolio_updated'));
+    return;
+  }
+
+  const { error } = await supabase.from('skills').upsert({
+    id: skillCategory.id,
+    title: skillCategory.title,
+    description: skillCategory.description,
+    skills: skillCategory.skills,
+    updated_at: new Date().toISOString()
+  });
+
+  if (error) throw error;
+  await fetchPortfolioDataFromSupabase();
+};
+
+export const deleteSkillCategoryFromSupabase = async (id: string): Promise<void> => {
+  if (!isSupabaseConfigured()) {
+    cachedPortfolioData.skills = cachedPortfolioData.skills.filter(s => s.id !== id);
+    window.dispatchEvent(new Event('portfolio_updated'));
+    return;
+  }
+
+  const { error } = await supabase.from('skills').delete().eq('id', id);
+  if (error) throw error;
+  await fetchPortfolioDataFromSupabase();
+};
+
+export const saveSecurityPracticesToSupabase = async (practices: { title: string; description: string; icon: string }[]): Promise<void> => {
+  cachedPortfolioData.securityPractices = practices;
+  window.dispatchEvent(new Event('portfolio_updated'));
+
+  if (!isSupabaseConfigured()) {
+    return;
+  }
+
+  // Clear and rewrite security practices
+  await supabase.from('security_practices').delete().neq('id', 'placeholder-non-existent');
+  const rows = practices.map((p, index) => ({
+    id: `practice-${index + 1}`,
+    title: p.title,
+    description: p.description,
+    icon: p.icon
+  }));
+  const { error } = await supabase.from('security_practices').upsert(rows);
+  if (error) {
+    console.warn('Could not persist security practices to Supabase:', error);
+  }
+  await fetchPortfolioDataFromSupabase();
+};
+
 export const saveSiteSettingsToSupabase = async (settings: SiteSettings): Promise<void> => {
   if (!isSupabaseConfigured()) {
     cachedPortfolioData.personal = settings;

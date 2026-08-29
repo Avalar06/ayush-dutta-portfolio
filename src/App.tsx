@@ -124,8 +124,8 @@ export default function App() {
         onLogout={async () => {
           await supabase.auth.signOut();
           setIsAdminAuth(false);
-          window.location.hash = '';
-          window.location.pathname = '/';
+          window.history.pushState({}, '', '/');
+          window.dispatchEvent(new PopStateEvent('popstate'));
         }}
         onPreviewProjectModal={(proj) => setPreviewProject(proj)}
       />

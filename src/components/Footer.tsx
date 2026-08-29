@@ -37,6 +37,20 @@ export const Footer: React.FC = () => {
             <a href={personal.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-[#3B82F6] transition-colors">LinkedIn</a>
             <span>•</span>
             <a href={personal.github} target="_blank" rel="noopener noreferrer" className="hover:text-[#3B82F6] transition-colors">GitHub</a>
+            <span>•</span>
+            <a
+              href="/admin"
+              onClick={(e) => {
+                e.preventDefault();
+                window.history.pushState({}, '', '/admin');
+                window.dispatchEvent(new PopStateEvent('popstate'));
+              }}
+              className="text-[#94A3B8]/30 hover:text-[#94A3B8] transition-colors p-1 rounded focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+              title="Admin Console"
+              aria-label="Admin Console"
+            >
+              <Shield className="w-3 h-3" />
+            </a>
           </div>
 
           <button
