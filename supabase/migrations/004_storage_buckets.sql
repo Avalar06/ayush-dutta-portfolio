@@ -3,7 +3,7 @@
 
 -- Create storage buckets if not exist
 insert into storage.buckets (id, name, public)
-values 
+values
   ('projects', 'projects', true),
   ('certificates', 'certificates', true),
   ('resumes', 'resumes', true),

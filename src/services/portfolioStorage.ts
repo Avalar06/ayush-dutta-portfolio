@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { sanitizeUrl, sanitizeString, sanitizeStorageFileName } from '../utils/security';
+import { sanitizeUrl, sanitizeString, sanitizeStorageFileName, validateUploadedFile } from '../utils/security';
 
 export interface Project {
   id: string;
@@ -1107,30 +1107,23 @@ const BUCKET_RULES: Record<'projects' | 'certificates' | 'resumes' | 'profile', 
     description: 'PDF or image files (.pdf, .jpg, .jpeg, .png, .webp)'
   },
   projects: {
-    allowedExts: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    allowedMimes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    description: 'Image files only (.jpg, .jpeg, .png, .webp, .gif)'
+    allowedExts: ['jpg', 'jpeg', 'png', 'webp'],
+    allowedMimes: ['image/jpeg', 'image/png', 'image/webp'],
+    description: 'Image files only (.jpg, .jpeg, .png, .webp)'
   },
   profile: {
-    allowedExts: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-    allowedMimes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-    description: 'Image files only (.jpg, .jpeg, .png, .webp, .gif)'
+    allowedExts: ['jpg', 'jpeg', 'png', 'webp'],
+    allowedMimes: ['image/jpeg', 'image/png', 'image/webp'],
+    description: 'Image files only (.jpg, .jpeg, .png, .webp)'
   }
 };
 
-// Secure File Upload with Strict Bucket-Specific Allowlist Validation
+// Secure File Upload with Strict Bucket-Specific Allowlist and Magic Byte Signature Validation
 export const uploadFileToSupabase = async (
   file: File,
   bucket: 'projects' | 'certificates' | 'resumes' | 'profile'
 ): Promise<string> => {
-  // Validate file presence and size (max 10MB)
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
-  if (!file || file.size <= 0) {
-    throw new Error('Invalid file provided.');
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    throw new Error('File size exceeds the 10MB limit.');
-  }
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   // Retrieve bucket validation rule
   const rule = BUCKET_RULES[bucket];
@@ -1138,33 +1131,24 @@ export const uploadFileToSupabase = async (
     throw new Error(`Unsupported storage bucket: ${bucket}`);
   }
 
-  // Validate extension
-  const rawParts = file.name.split('.');
-  if (rawParts.length < 2) {
-    throw new Error('Files must have a valid file extension.');
+  // Perform full binary signature (magic byte), extension, and MIME validation
+  const validation = await validateUploadedFile(file, {
+    allowedExtensions: rule.allowedExts,
+    allowedMimeTypes: rule.allowedMimes,
+    maxSizeBytes: MAX_FILE_SIZE
+  });
+
+  if (!validation.valid) {
+    throw new Error(validation.error || `Invalid file for ${bucket}.`);
   }
-  const rawExt = rawParts.pop()?.toLowerCase() || '';
+
+  // Extract cleaned extension
+  const rawParts = file.name.split('.');
+  const rawExt = rawParts[rawParts.length - 1]?.toLowerCase() || '';
   const sanitizedExt = rawExt.replace(/[^a-z0-9]/g, '');
 
-  if (!sanitizedExt || !rule.allowedExts.includes(sanitizedExt)) {
-    throw new Error(`Invalid file type for ${bucket}. Required: ${rule.description}`);
-  }
-
-  // Validate MIME type against allowed list
-  const fileMime = file.type ? file.type.toLowerCase().trim() : '';
-  if (fileMime && !rule.allowedMimes.includes(fileMime)) {
-    throw new Error(`Invalid MIME type (${fileMime}) for ${bucket}. Required: ${rule.description}`);
-  }
-
-  // Verify consistency between extension and MIME family
-  if (sanitizedExt === 'pdf' && fileMime && fileMime !== 'application/pdf') {
-    throw new Error('File extension (.pdf) does not match MIME type.');
-  }
-  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(sanitizedExt) && fileMime && !fileMime.startsWith('image/')) {
-    throw new Error('Image file extension does not match image MIME type.');
-  }
-
-  const sanitizedName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${sanitizedExt}`;
+  const sanitizedBaseName = sanitizeStorageFileName(file.name);
+  const sanitizedName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}_${sanitizedBaseName}`;
   const filePath = `${sanitizedName}`;
 
   if (!isSupabaseConfigured()) {

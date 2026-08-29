@@ -90,7 +90,7 @@ export default function App() {
 
   if (isResetPasswordRoute) {
     return (
-      <ResetPassword 
+      <ResetPassword
         onSuccess={() => {
           window.location.hash = '';
           window.location.pathname = '/admin';
@@ -111,16 +111,16 @@ export default function App() {
 
     if (!isAdminAuth) {
       return (
-        <AdminLogin 
+        <AdminLogin
           onLoginSuccess={async () => {
             const authorized = await verifyAdminUser();
             setIsAdminAuth(authorized);
-          }} 
+          }}
         />
       );
     }
     return (
-      <AdminLayout 
+      <AdminLayout
         onLogout={async () => {
           await supabase.auth.signOut();
           setIsAdminAuth(false);

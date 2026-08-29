@@ -12,9 +12,10 @@ begin
 end;
 $$ language plpgsql security definer set search_path = public, auth, pg_temp;
 
--- Permissions for fn_is_admin
+-- Permissions for fn_is_admin (internal helper for authenticated RLS and service operations)
 revoke execute on function public.fn_is_admin() from public;
-grant execute on function public.fn_is_admin() to anon, authenticated, service_role;
+revoke execute on function public.fn_is_admin() from anon;
+grant execute on function public.fn_is_admin() to authenticated, service_role;
 
 -- Enable RLS on all tables
 alter table site_settings enable row level security;
@@ -117,7 +118,7 @@ begin
   update public.resumes set published = false where id <> p_resume_id;
   update public.resumes set published = true where id = p_resume_id;
 end;
-$$ language plpgsql security definer set search_path = public, auth;
+$$ language plpgsql security definer set search_path = public, auth, pg_temp;
 
 -- Restrict direct execution to authenticated users only
 revoke execute on function public.set_published_resume(text) from public;

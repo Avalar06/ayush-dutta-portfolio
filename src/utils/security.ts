@@ -1,9 +1,9 @@
 /**
  * Security and Sanitization Utilities
- * 
+ *
  * Provides robust defensive mechanisms for:
- * 1. Safe URL parsing & protocol filtering (prevents XSS via javascript:, data:, vbscript: protocols)
- * 2. File upload validation (MIME-types, file extensions, size limits, path sanitization)
+ * 1. Safe URL parsing & protocol filtering (prevents XSS via javascript:, data:, vbscript:, blob:, file:, etc.)
+ * 2. File upload validation with TRUE magic byte verification (PDF, PNG, JPEG, WEBP, GIF)
  * 3. Input sanitation & length bounding
  * 4. Contact form abuse & spam prevention (rate limiting & honeypot verification)
  */
@@ -19,33 +19,49 @@ const ALLOWED_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
  */
 export function sanitizeUrl(url?: string | null): string {
   if (!url) return '';
-  const trimmed = url.trim();
-  if (!trimmed) return '';
 
-  // Allow relative URLs starting with / (e.g. /resumes/cv.pdf or /images/avatar.webp)
-  // Ensure it does not start with // (protocol-relative) or /\\ which can bypass checks
-  if (trimmed.startsWith('/') && !trimmed.startsWith('//') && !trimmed.startsWith('/\\')) {
+  // Strip all control characters (0x00-0x1F, 0x7F) and null bytes before processing
+  const cleaned = url.replace(/[\u0000-\u001F\u007F]/g, '').trim();
+  if (!cleaned) return '';
+
+  // Prevent protocol-relative URLs (//example.com), /\, or other scheme-relative vectors
+  if (cleaned.startsWith('//') || cleaned.startsWith('/\\') || cleaned.startsWith('\\/')) {
+    return '';
+  }
+
+  // Allow relative URLs starting with a single '/'
+  if (cleaned.startsWith('/')) {
     // Normalise any accidental '/public/' prefix
-    if (trimmed.startsWith('/public/')) {
-      return trimmed.replace('/public/', '/');
+    const path = cleaned.startsWith('/public/') ? cleaned.replace('/public/', '/') : cleaned;
+    // Check for directory traversal sequences like /../
+    if (path.includes('/../') || path.endsWith('/..')) {
+      return '';
     }
-    return encodeURI(decodeURI(trimmed));
+    return encodeURI(decodeURI(path));
   }
 
   try {
-    const parsed = new URL(trimmed);
-    if (ALLOWED_PROTOCOLS.has(parsed.protocol.toLowerCase())) {
-      return parsed.href;
+    const parsed = new URL(cleaned);
+    const protocol = parsed.protocol.toLowerCase();
+
+    // Explicitly reject dangerous schemes
+    if (!ALLOWED_PROTOCOLS.has(protocol)) {
+      return '';
     }
-    // Disallowed protocol (e.g. javascript:, data:, vbscript:)
-    console.warn(`[Security Warning] Disallowed URL protocol: ${parsed.protocol}`);
-    return '';
+
+    // For http / https, ensure a valid hostname exists
+    if (protocol === 'http:' || protocol === 'https:') {
+      if (!parsed.hostname || parsed.hostname.includes(' ')) {
+        return '';
+      }
+    }
+
+    return parsed.href;
   } catch {
-    // If URL constructor fails on relative path or string, double check if it's a valid relative path
-    if (/^[a-zA-Z0-9_\-./]+$/.test(trimmed) && !trimmed.includes('://') && !trimmed.startsWith('javascript:')) {
-      return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+    // Check if it is a safe relative pathname like 'resumes/cv.pdf' without protocols
+    if (/^[a-zA-Z0-9_\-./]+$/.test(cleaned) && !cleaned.includes('://') && !cleaned.includes(':') && !cleaned.includes('..')) {
+      return `/${cleaned}`;
     }
-    console.warn(`[Security Warning] Invalid URL rejected: ${trimmed.slice(0, 50)}`);
     return '';
   }
 }
@@ -98,20 +114,116 @@ export interface FileValidationOptions {
 export interface FileValidationResult {
   valid: boolean;
   error?: string;
+  detectedType?: 'pdf' | 'png' | 'jpeg' | 'webp' | 'gif';
 }
 
 /**
- * Validates uploaded file MIME-type, extension, and byte size.
+ * Validates the magic byte signature from the initial binary content of a file.
+ * Returns the detected file format, or null if unrecognized/malicious.
  */
-export function validateUploadedFile(
+export async function detectFileSignature(file: File): Promise<'pdf' | 'png' | 'jpeg' | 'webp' | 'gif' | null> {
+  // Read first 32 bytes for magic byte header analysis using File.slice()
+  const headerSlice = file.slice(0, 32);
+  const arrayBuffer = await headerSlice.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+
+  if (bytes.length < 4) {
+    return null;
+  }
+
+  // 1. PDF Signature: %PDF- (0x25 0x50 0x44 0x46 0x2D)
+  if (
+    bytes.length >= 5 &&
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2D
+  ) {
+    return 'pdf';
+  }
+
+  // 2. PNG Signature: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4E &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0D &&
+    bytes[5] === 0x0A &&
+    bytes[6] === 0x1A &&
+    bytes[7] === 0x0A
+  ) {
+    return 'png';
+  }
+
+  // 3. JPEG/JPG Signature (SOI): FF D8 FF
+  if (
+    bytes[0] === 0xFF &&
+    bytes[1] === 0xD8 &&
+    bytes[2] === 0xFF
+  ) {
+    return 'jpeg';
+  }
+
+  // 4. WEBP Signature: "RIFF" (bytes 0..3) + 4 size bytes + "WEBP" (bytes 8..11)
+  if (
+    bytes.length >= 12 &&
+    bytes[0] === 0x52 && // 'R'
+    bytes[1] === 0x49 && // 'I'
+    bytes[2] === 0x46 && // 'F'
+    bytes[3] === 0x46 && // 'F'
+    bytes[8] === 0x57 && // 'W'
+    bytes[9] === 0x45 && // 'E'
+    bytes[10] === 0x42 && // 'B'
+    bytes[11] === 0x50   // 'P'
+  ) {
+    return 'webp';
+  }
+
+  // 5. GIF Signature: GIF87a or GIF89a (0x47 0x49 0x46 0x38 0x37/0x39 0x61)
+  if (
+    bytes.length >= 6 &&
+    bytes[0] === 0x47 && // 'G'
+    bytes[1] === 0x49 && // 'I'
+    bytes[2] === 0x46 && // 'F'
+    bytes[3] === 0x38 && // '8'
+    (bytes[4] === 0x37 || bytes[4] === 0x39) && // '7' or '9'
+    bytes[5] === 0x61    // 'a'
+  ) {
+    return 'gif';
+  }
+
+  return null;
+}
+
+/**
+ * Validates uploaded file MIME-type, extension, byte size, AND verified binary magic bytes.
+ *
+ * Sequence:
+ * 1. File exists
+ * 2. File is not empty (size > 0)
+ * 3. File size is within configured limit
+ * 4. File extension is allowed
+ * 5. Declared MIME type is allowed
+ * 6. ACTUAL FILE CONTENT / MAGIC BYTES match the expected file type
+ */
+export async function validateUploadedFile(
   file: File,
   options: FileValidationOptions
-): FileValidationResult {
+): Promise<FileValidationResult> {
+  // 1. File exists
   if (!file) {
     return { valid: false, error: 'No file was provided.' };
   }
 
-  // Size limit check
+  // 2. File is not empty
+  if (file.size === 0) {
+    return { valid: false, error: 'Uploaded file cannot be empty.' };
+  }
+
+  // 3. Size limit check
   if (file.size > options.maxSizeBytes) {
     const maxMb = (options.maxSizeBytes / (1024 * 1024)).toFixed(0);
     return {
@@ -120,23 +232,24 @@ export function validateUploadedFile(
     };
   }
 
-  if (file.size === 0) {
-    return { valid: false, error: 'Uploaded file cannot be empty.' };
-  }
-
-  // Extension check
+  // 4. Extension check
   const fileName = file.name.toLowerCase();
-  const hasValidExt = options.allowedExtensions.some(ext => fileName.endsWith(ext.toLowerCase()));
+  const rawParts = fileName.split('.');
+  if (rawParts.length < 2) {
+    return { valid: false, error: 'File must have a valid extension.' };
+  }
+  const fileExt = rawParts[rawParts.length - 1];
+  const hasValidExt = options.allowedExtensions.some(ext => ext.toLowerCase().replace(/^\./, '') === fileExt);
   if (!hasValidExt) {
     return {
       valid: false,
-      error: `Invalid file extension. Allowed extensions: ${options.allowedExtensions.join(', ')}`
+      error: `Invalid file extension (.${fileExt}). Allowed extensions: ${options.allowedExtensions.join(', ')}`
     };
   }
 
-  // MIME type check
+  // 5. Declared MIME type check
   if (file.type) {
-    const isMimeAllowed = options.allowedMimeTypes.includes(file.type.toLowerCase());
+    const isMimeAllowed = options.allowedMimeTypes.some(m => m.toLowerCase() === file.type.toLowerCase());
     if (!isMimeAllowed) {
       return {
         valid: false,
@@ -145,7 +258,40 @@ export function validateUploadedFile(
     }
   }
 
-  return { valid: true };
+  // 6. ACTUAL FILE CONTENT / MAGIC BYTES verification
+  try {
+    const detectedType = await detectFileSignature(file);
+    if (!detectedType) {
+      return {
+        valid: false,
+        error: 'File signature verification failed: File content does not match any allowed format (PDF, PNG, JPEG, WEBP, GIF).'
+      };
+    }
+
+    // Match detected magic bytes against the file extension
+    const validExtensionsForType: Record<string, string[]> = {
+      pdf: ['pdf'],
+      png: ['png'],
+      jpeg: ['jpg', 'jpeg'],
+      webp: ['webp'],
+      gif: ['gif']
+    };
+
+    const allowedForDetected = validExtensionsForType[detectedType] || [];
+    if (!allowedForDetected.includes(fileExt)) {
+      return {
+        valid: false,
+        error: `File signature mismatch: File content is ${detectedType.toUpperCase()} but extension is .${fileExt}.`
+      };
+    }
+
+    return { valid: true, detectedType };
+  } catch (err) {
+    return {
+      valid: false,
+      error: 'Unable to verify file binary signature.'
+    };
+  }
 }
 
 /**
