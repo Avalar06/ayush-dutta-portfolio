@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, FileText, Download, ExternalLink, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ResumeItem, getPortfolioData, getPublishedResumes } from '../services/portfolioStorage';
+import { sanitizeUrl } from '../utils/security';
 
 interface ResumeModalProps {
   isOpen: boolean;
@@ -52,9 +53,9 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selec
     if (!path) return '';
     const trimmed = path.trim();
     if (trimmed.startsWith('/public/')) {
-      return trimmed.replace('/public/', '/');
+      return sanitizeUrl(trimmed.replace('/public/', '/'));
     }
-    return trimmed;
+    return sanitizeUrl(trimmed);
   };
 
   const handleDownload = async (resume: ResumeItem) => {

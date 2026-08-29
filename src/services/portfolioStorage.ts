@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { sanitizeUrl, sanitizeString, sanitizeStorageFileName } from '../utils/security';
 
 export interface Project {
   id: string;
@@ -645,40 +646,53 @@ export const fetchPortfolioDataFromSupabase = async (): Promise<PortfolioDatabas
 
 // Database Mutation Helpers (Admin operations)
 export const saveProjectToSupabase = async (project: Project): Promise<void> => {
+  const sanitizedProject: Project = {
+    ...project,
+    title: sanitizeString(project.title, 200),
+    label: sanitizeString(project.label, 100),
+    badge: sanitizeString(project.badge, 50),
+    shortDescription: sanitizeString(project.shortDescription, 500),
+    fullDescription: sanitizeString(project.fullDescription, 5000),
+    description: sanitizeString(project.description, 5000),
+    role: sanitizeString(project.role, 100),
+    githubUrl: sanitizeUrl(project.githubUrl),
+    demoUrl: sanitizeUrl(project.demoUrl)
+  };
+
   if (!isSupabaseConfigured()) {
     // Local fallback for prototyping
-    const idx = cachedPortfolioData.projects.findIndex(p => p.id === project.id);
+    const idx = cachedPortfolioData.projects.findIndex(p => p.id === sanitizedProject.id);
     if (idx >= 0) {
-      cachedPortfolioData.projects[idx] = project;
+      cachedPortfolioData.projects[idx] = sanitizedProject;
     } else {
-      cachedPortfolioData.projects.unshift(project);
+      cachedPortfolioData.projects.unshift(sanitizedProject);
     }
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('projects').upsert({
-    id: project.id,
-    title: project.title,
-    category: project.category,
-    status: project.status,
-    featured: project.featured,
-    published: project.published,
-    label: project.label,
-    badge: project.badge,
-    short_description: project.shortDescription,
-    full_description: project.fullDescription,
-    description: project.description,
-    technologies: project.technologies,
-    capabilities: project.capabilities,
-    metrics: project.metrics,
-    architecture_steps: project.architectureSteps,
-    case_study: project.caseStudy,
-    github_url: project.githubUrl,
-    demo_url: project.demoUrl,
-    date: project.date,
-    role: project.role,
-    is_flagship: project.isFlagship,
+    id: sanitizedProject.id,
+    title: sanitizedProject.title,
+    category: sanitizedProject.category,
+    status: sanitizedProject.status,
+    featured: sanitizedProject.featured,
+    published: sanitizedProject.published,
+    label: sanitizedProject.label,
+    badge: sanitizedProject.badge,
+    short_description: sanitizedProject.shortDescription,
+    full_description: sanitizedProject.fullDescription,
+    description: sanitizedProject.description,
+    technologies: sanitizedProject.technologies,
+    capabilities: sanitizedProject.capabilities,
+    metrics: sanitizedProject.metrics,
+    architecture_steps: sanitizedProject.architectureSteps,
+    case_study: sanitizedProject.caseStudy,
+    github_url: sanitizedProject.githubUrl,
+    demo_url: sanitizedProject.demoUrl,
+    date: sanitizedProject.date,
+    role: sanitizedProject.role,
+    is_flagship: sanitizedProject.isFlagship,
     updated_at: new Date().toISOString()
   });
 
@@ -699,24 +713,33 @@ export const deleteProjectFromSupabase = async (id: string): Promise<void> => {
 };
 
 export const saveCertificationToSupabase = async (cert: Certification): Promise<void> => {
+  const sanitizedCert: Certification = {
+    ...cert,
+    title: sanitizeString(cert.title, 200),
+    issuer: sanitizeString(cert.issuer, 200),
+    credentialId: sanitizeString(cert.credentialId, 150),
+    verificationUrl: sanitizeUrl(cert.verificationUrl),
+    pdfPlaceholder: sanitizeUrl(cert.pdfPlaceholder)
+  };
+
   if (!isSupabaseConfigured()) {
-    const idx = cachedPortfolioData.certifications.findIndex(c => c.id === cert.id);
-    if (idx >= 0) cachedPortfolioData.certifications[idx] = cert;
-    else cachedPortfolioData.certifications.unshift(cert);
+    const idx = cachedPortfolioData.certifications.findIndex(c => c.id === sanitizedCert.id);
+    if (idx >= 0) cachedPortfolioData.certifications[idx] = sanitizedCert;
+    else cachedPortfolioData.certifications.unshift(sanitizedCert);
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('certifications').upsert({
-    id: cert.id,
-    title: cert.title,
-    issuer: cert.issuer,
-    date: cert.date,
-    duration: cert.duration,
-    credential_id: cert.credentialId,
-    verification_url: cert.verificationUrl,
-    pdf_placeholder: cert.pdfPlaceholder,
-    published: cert.published,
+    id: sanitizedCert.id,
+    title: sanitizedCert.title,
+    issuer: sanitizedCert.issuer,
+    date: sanitizedCert.date,
+    duration: sanitizedCert.duration,
+    credential_id: sanitizedCert.credentialId,
+    verification_url: sanitizedCert.verificationUrl,
+    pdf_placeholder: sanitizedCert.pdfPlaceholder,
+    published: sanitizedCert.published,
     updated_at: new Date().toISOString()
   });
 
@@ -737,23 +760,34 @@ export const deleteCertificationFromSupabase = async (id: string): Promise<void>
 };
 
 export const saveExperienceToSupabase = async (exp: ExperienceItem): Promise<void> => {
+  const sanitizedExp: ExperienceItem = {
+    ...exp,
+    role: sanitizeString(exp.role, 200),
+    organization: sanitizeString(exp.organization, 200),
+    period: sanitizeString(exp.period, 100),
+    type: sanitizeString(exp.type, 100),
+    location: sanitizeString(exp.location, 150),
+    responsibilities: (exp.responsibilities || []).map(r => sanitizeString(r, 1000)),
+    frameworks: (exp.frameworks || []).map(f => sanitizeString(f, 100))
+  };
+
   if (!isSupabaseConfigured()) {
-    const idx = cachedPortfolioData.experience.findIndex(e => e.id === exp.id);
-    if (idx >= 0) cachedPortfolioData.experience[idx] = exp;
-    else cachedPortfolioData.experience.unshift(exp);
+    const idx = cachedPortfolioData.experience.findIndex(e => e.id === sanitizedExp.id);
+    if (idx >= 0) cachedPortfolioData.experience[idx] = sanitizedExp;
+    else cachedPortfolioData.experience.unshift(sanitizedExp);
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('experience').upsert({
-    id: exp.id,
-    role: exp.role,
-    organization: exp.organization,
-    period: exp.period,
-    type: exp.type,
-    location: exp.location,
-    responsibilities: exp.responsibilities,
-    frameworks: exp.frameworks,
+    id: sanitizedExp.id,
+    role: sanitizedExp.role,
+    organization: sanitizedExp.organization,
+    period: sanitizedExp.period,
+    type: sanitizedExp.type,
+    location: sanitizedExp.location,
+    responsibilities: sanitizedExp.responsibilities,
+    frameworks: sanitizedExp.frameworks,
     updated_at: new Date().toISOString()
   });
 
@@ -774,23 +808,34 @@ export const deleteExperienceFromSupabase = async (id: string): Promise<void> =>
 };
 
 export const saveEducationToSupabase = async (edu: EducationItem): Promise<void> => {
+  const sanitizedEdu: EducationItem = {
+    ...edu,
+    degree: sanitizeString(edu.degree, 200),
+    institution: sanitizeString(edu.institution, 200),
+    period: sanitizeString(edu.period, 100),
+    score: sanitizeString(edu.score, 50),
+    scoreLabel: sanitizeString(edu.scoreLabel, 50),
+    highlights: (edu.highlights || []).map(h => sanitizeString(h, 500)),
+    areas: (edu.areas || []).map(a => sanitizeString(a, 200))
+  };
+
   if (!isSupabaseConfigured()) {
-    const idx = cachedPortfolioData.education.findIndex(e => e.id === edu.id);
-    if (idx >= 0) cachedPortfolioData.education[idx] = edu;
-    else cachedPortfolioData.education.unshift(edu);
+    const idx = cachedPortfolioData.education.findIndex(e => e.id === sanitizedEdu.id);
+    if (idx >= 0) cachedPortfolioData.education[idx] = sanitizedEdu;
+    else cachedPortfolioData.education.unshift(sanitizedEdu);
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('education').upsert({
-    id: edu.id,
-    degree: edu.degree,
-    institution: edu.institution,
-    period: edu.period,
-    score: edu.score,
-    score_label: edu.scoreLabel,
-    highlights: edu.highlights,
-    areas: edu.areas,
+    id: sanitizedEdu.id,
+    degree: sanitizedEdu.degree,
+    institution: sanitizedEdu.institution,
+    period: sanitizedEdu.period,
+    score: sanitizedEdu.score,
+    score_label: sanitizedEdu.scoreLabel,
+    highlights: sanitizedEdu.highlights,
+    areas: sanitizedEdu.areas,
     updated_at: new Date().toISOString()
   });
 
@@ -811,19 +856,26 @@ export const deleteEducationFromSupabase = async (id: string): Promise<void> => 
 };
 
 export const saveSkillCategoryToSupabase = async (skillCategory: SkillCategory): Promise<void> => {
+  const sanitizedSkillCategory: SkillCategory = {
+    ...skillCategory,
+    title: sanitizeString(skillCategory.title, 150),
+    description: sanitizeString(skillCategory.description, 500),
+    skills: (skillCategory.skills || []).map(s => sanitizeString(s, 100))
+  };
+
   if (!isSupabaseConfigured()) {
-    const idx = cachedPortfolioData.skills.findIndex(s => s.id === skillCategory.id);
-    if (idx >= 0) cachedPortfolioData.skills[idx] = skillCategory;
-    else cachedPortfolioData.skills.push(skillCategory);
+    const idx = cachedPortfolioData.skills.findIndex(s => s.id === sanitizedSkillCategory.id);
+    if (idx >= 0) cachedPortfolioData.skills[idx] = sanitizedSkillCategory;
+    else cachedPortfolioData.skills.push(sanitizedSkillCategory);
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('skills').upsert({
-    id: skillCategory.id,
-    title: skillCategory.title,
-    description: skillCategory.description,
-    skills: skillCategory.skills,
+    id: sanitizedSkillCategory.id,
+    title: sanitizedSkillCategory.title,
+    description: sanitizedSkillCategory.description,
+    skills: sanitizedSkillCategory.skills,
     updated_at: new Date().toISOString()
   });
 
@@ -844,7 +896,13 @@ export const deleteSkillCategoryFromSupabase = async (id: string): Promise<void>
 };
 
 export const saveSecurityPracticesToSupabase = async (practices: { title: string; description: string; icon: string }[]): Promise<void> => {
-  cachedPortfolioData.securityPractices = practices;
+  const sanitizedPractices = practices.map(p => ({
+    title: sanitizeString(p.title, 150),
+    description: sanitizeString(p.description, 500),
+    icon: sanitizeString(p.icon, 50) || 'Shield'
+  }));
+
+  cachedPortfolioData.securityPractices = sanitizedPractices;
   window.dispatchEvent(new Event('portfolio_updated'));
 
   if (!isSupabaseConfigured()) {
@@ -853,7 +911,7 @@ export const saveSecurityPracticesToSupabase = async (practices: { title: string
 
   // Clear and rewrite security practices
   await supabase.from('security_practices').delete().neq('id', 'placeholder-non-existent');
-  const rows = practices.map((p, index) => ({
+  const rows = sanitizedPractices.map((p, index) => ({
     id: `practice-${index + 1}`,
     title: p.title,
     description: p.description,
@@ -867,27 +925,41 @@ export const saveSecurityPracticesToSupabase = async (practices: { title: string
 };
 
 export const saveSiteSettingsToSupabase = async (settings: SiteSettings): Promise<void> => {
+  const sanitizedSettings: SiteSettings = {
+    name: sanitizeString(settings.name, 100),
+    title: sanitizeString(settings.title, 150),
+    location: sanitizeString(settings.location, 100),
+    email: sanitizeString(settings.email, 120),
+    phone: sanitizeString(settings.phone, 50),
+    linkedin: sanitizeUrl(settings.linkedin),
+    github: sanitizeUrl(settings.github),
+    status: sanitizeString(settings.status, 80),
+    shortBio: sanitizeString(settings.shortBio, 500),
+    aboutSummary: sanitizeString(settings.aboutSummary, 2000),
+    focusAreas: (settings.focusAreas || []).map(f => sanitizeString(f, 150))
+  };
+
   if (!isSupabaseConfigured()) {
-    cachedPortfolioData.personal = settings;
-    cachedPortfolioData.about.summary = settings.aboutSummary;
-    cachedPortfolioData.about.focusAreas = settings.focusAreas;
+    cachedPortfolioData.personal = sanitizedSettings;
+    cachedPortfolioData.about.summary = sanitizedSettings.aboutSummary;
+    cachedPortfolioData.about.focusAreas = sanitizedSettings.focusAreas;
     window.dispatchEvent(new Event('portfolio_updated'));
     return;
   }
 
   const { error } = await supabase.from('site_settings').upsert({
     id: '00000000-0000-0000-0000-000000000001',
-    name: settings.name,
-    title: settings.title,
-    location: settings.location,
-    email: settings.email,
-    phone: settings.phone,
-    linkedin: settings.linkedin,
-    github: settings.github,
-    status: settings.status,
-    short_bio: settings.shortBio,
-    about_summary: settings.aboutSummary,
-    focus_areas: settings.focusAreas,
+    name: sanitizedSettings.name,
+    title: sanitizedSettings.title,
+    location: sanitizedSettings.location,
+    email: sanitizedSettings.email,
+    phone: sanitizedSettings.phone,
+    linkedin: sanitizedSettings.linkedin,
+    github: sanitizedSettings.github,
+    status: sanitizedSettings.status,
+    short_bio: sanitizedSettings.shortBio,
+    about_summary: sanitizedSettings.aboutSummary,
+    focus_areas: sanitizedSettings.focusAreas,
     updated_at: new Date().toISOString()
   });
 
@@ -896,16 +968,24 @@ export const saveSiteSettingsToSupabase = async (settings: SiteSettings): Promis
 };
 
 export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> => {
+  const sanitizedResume: ResumeItem = {
+    ...resume,
+    title: sanitizeString(resume.title, 150),
+    targetRoles: sanitizeString(resume.targetRoles, 300),
+    description: sanitizeString(resume.description, 1000),
+    pdfPath: sanitizeUrl(resume.pdfPath)
+  };
+
   // Update local cache optimistically
-  if (resume.published) {
+  if (sanitizedResume.published) {
     cachedPortfolioData.resumes = (cachedPortfolioData.resumes || []).map(r => ({
       ...r,
-      published: r.id === resume.id
+      published: r.id === sanitizedResume.id
     }));
   }
-  const idx = (cachedPortfolioData.resumes || []).findIndex(r => r.id === resume.id);
-  if (idx >= 0) cachedPortfolioData.resumes[idx] = resume;
-  else cachedPortfolioData.resumes.unshift(resume);
+  const idx = (cachedPortfolioData.resumes || []).findIndex(r => r.id === sanitizedResume.id);
+  if (idx >= 0) cachedPortfolioData.resumes[idx] = sanitizedResume;
+  else cachedPortfolioData.resumes.unshift(sanitizedResume);
   window.dispatchEvent(new Event('portfolio_updated'));
 
   if (!isSupabaseConfigured()) {
@@ -913,11 +993,11 @@ export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> =>
   }
 
   // If publishing this resume, unpublish all others to maintain exactly one active published resume
-  if (resume.published) {
+  if (sanitizedResume.published) {
     const { error: unpubError } = await supabase
       .from('resumes')
       .update({ published: false })
-      .neq('id', resume.id);
+      .neq('id', sanitizedResume.id);
 
     if (unpubError) {
       console.warn('Warning: Could not unpublish other resumes:', unpubError);
@@ -925,12 +1005,12 @@ export const saveResumeToSupabase = async (resume: ResumeItem): Promise<void> =>
   }
 
   const { error } = await supabase.from('resumes').upsert({
-    id: resume.id,
-    title: resume.title,
-    target_roles: resume.targetRoles,
-    description: resume.description,
-    pdf_path: resume.pdfPath,
-    published: resume.published ?? false
+    id: sanitizedResume.id,
+    title: sanitizedResume.title,
+    target_roles: sanitizedResume.targetRoles,
+    description: sanitizedResume.description,
+    pdf_path: sanitizedResume.pdfPath,
+    published: sanitizedResume.published ?? false
   });
 
   if (error) {

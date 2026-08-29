@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { X, Award, FileText, Download, ExternalLink, AlertCircle, Loader2, CheckCircle2, ShieldCheck, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Certification } from '../services/portfolioStorage';
+import { sanitizeUrl } from '../utils/security';
 
 interface CertificateModalProps {
   certificate: Certification | null;
@@ -29,9 +30,9 @@ export const CertificateModal: React.FC<CertificateModalProps> = ({ certificate,
   const resolvedFileUrl = useMemo(() => {
     if (!rawFileUrl) return '';
     if (rawFileUrl.startsWith('/public/')) {
-      return rawFileUrl.replace('/public/', '/');
+      return sanitizeUrl(rawFileUrl.replace('/public/', '/'));
     }
-    return rawFileUrl;
+    return sanitizeUrl(rawFileUrl);
   }, [rawFileUrl]);
 
   // Determine file type safely by inspecting path without query params

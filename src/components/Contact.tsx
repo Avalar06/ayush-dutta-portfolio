@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2, Copy, Check, MessageSquare } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2, Copy, Check, MessageSquare, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getPortfolioData } from '../services/portfolioStorage';
+import { isValidEmail, sanitizeString, checkContactFormRateLimit, recordContactFormSubmission } from '../utils/security';
 
 export const Contact: React.FC = () => {
   const [data, setData] = useState(() => getPortfolioData());
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const [honeypot, setHoneypot] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,10 +28,39 @@ export const Contact: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+
+    // Honeypot check: If the hidden honeypot field is filled, silently simulate success to drop spam
+    if (honeypot.trim()) {
+      setSubmitted(true);
+      setFormData({ name: '', email: '', subject: '', message: '' });
+      return;
+    }
+
+    const cleanName = sanitizeString(formData.name, 100);
+    const cleanEmail = sanitizeString(formData.email, 120);
+    const cleanSubject = sanitizeString(formData.subject, 150);
+    const cleanMessage = sanitizeString(formData.message, 3000);
+
+    if (!cleanName || !cleanEmail || !cleanMessage) {
       setError('Please fill in all required fields (Name, Email, and Message).');
       return;
     }
+
+    if (!isValidEmail(cleanEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    // Rate limiting check
+    const rateLimit = checkContactFormRateLimit();
+    if (!rateLimit.allowed) {
+      setError(`Please wait ${rateLimit.waitSeconds || 15} seconds before sending another message.`);
+      return;
+    }
+
+    // Record submission timestamp for client-side rate limiting
+    recordContactFormSubmission();
+
     setError(null);
     setSubmitted(true);
     setTimeout(() => {
@@ -176,7 +207,21 @@ export const Contact: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+                {/* Honeypot field - hidden from humans, traps automated spam bots */}
+                <div className="hidden" aria-hidden="true" style={{ display: 'none' }}>
+                  <label htmlFor="website_hp">Do not fill this field</label>
+                  <input
+                    id="website_hp"
+                    type="text"
+                    name="website_hp"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-[#94A3B8] mb-1.5 font-mono">
@@ -185,6 +230,7 @@ export const Contact: React.FC = () => {
                     <input
                       type="text"
                       required
+                      maxLength={100}
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Recruiter or Hiring Manager"
@@ -199,6 +245,7 @@ export const Contact: React.FC = () => {
                     <input
                       type="email"
                       required
+                      maxLength={120}
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       placeholder="name@company.com"
@@ -213,6 +260,7 @@ export const Contact: React.FC = () => {
                   </label>
                   <input
                     type="text"
+                    maxLength={150}
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     placeholder="e.g. Technology / Cybersecurity Opportunity"
@@ -227,6 +275,7 @@ export const Contact: React.FC = () => {
                   <textarea
                     rows={4}
                     required
+                    maxLength={3000}
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     placeholder="Share details regarding the role, timeline, or inquiries..."

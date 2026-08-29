@@ -10,7 +10,11 @@ begin
     where user_id = auth.uid()
   );
 end;
-$$ language plpgsql security definer set search_path = public, auth;
+$$ language plpgsql security definer set search_path = public, auth, pg_temp;
+
+-- Permissions for fn_is_admin
+revoke execute on function public.fn_is_admin() from public;
+grant execute on function public.fn_is_admin() to anon, authenticated, service_role;
 
 -- Enable RLS on all tables
 alter table site_settings enable row level security;
