@@ -113,15 +113,15 @@ export interface PortfolioDatabase {
 export const initialPortfolioData: PortfolioDatabase = {
   personal: {
     name: "Ayush Dutta",
-    title: "Cybersecurity | Security Monitoring | Applied Machine Learning",
+    title: "Cybersecurity & Technology | IT Operations | Applied Data & Systems",
     location: "Bardhaman, West Bengal, India",
     email: "Dayush849@gmail.com",
     phone: "+91-6297110058",
     linkedin: "https://linkedin.com/in/ayushdutta",
     github: "https://github.com/ayushdutta-sec",
-    status: "Entry-Level Cybersecurity / IT Opportunities",
-    shortBio: "Cybersecurity-focused technology professional building practical security monitoring, anomaly detection, and data-driven solutions.",
-    aboutSummary: "Ayush Dutta is a cybersecurity-focused graduate with a Bachelor of Computer Applications and an M.Sc. in IT Cybersecurity. He has hands-on experience through independent technical projects and a structured cybersecurity internship.",
+    status: "Open to Technology & Cybersecurity Opportunities",
+    shortBio: "Technology professional with an M.Sc. in IT Cybersecurity and BCA, building practical security monitoring, IT operations workflows, automation, and data-driven systems.",
+    aboutSummary: "I am a technology and cybersecurity-focused graduate with a Bachelor of Computer Applications and an M.Sc. in IT Cybersecurity. I have hands-on experience through independent technical projects and a structured cybersecurity internship, with interests spanning cybersecurity, technology operations, data, automation, and applied systems.",
     focusAreas: [
       "Security monitoring & alert triage",
       "Log analysis & anomaly detection",
@@ -132,7 +132,7 @@ export const initialPortfolioData: PortfolioDatabase = {
     ]
   },
   about: {
-    summary: "Ayush Dutta is a cybersecurity-focused graduate with a Bachelor of Computer Applications and an M.Sc. in IT Cybersecurity. He has hands-on experience through independent technical projects and a structured cybersecurity internship.",
+    summary: "I am a technology and cybersecurity-focused graduate with a Bachelor of Computer Applications and an M.Sc. in IT Cybersecurity. I have hands-on experience through independent technical projects and a structured cybersecurity internship, with interests spanning cybersecurity, technology operations, data, automation, and applied systems.",
     focusAreas: [
       "Security monitoring & alert triage",
       "Log analysis & anomaly detection",

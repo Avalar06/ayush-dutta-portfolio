@@ -50,11 +50,11 @@ export const Footer: React.FC = () => {
 
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] font-mono text-[#94A3B8]">
           <div>
-            © {new Date().getFullYear()} {personal.name}. All security telemetry verified.
+            © {new Date().getFullYear()} {personal.name}. Professional Portfolio.
           </div>
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block animate-pulse" />
-            <span>Operational Baseline: Active & Secure</span>
+            <span>Open to Opportunities</span>
           </div>
         </div>
       </div>

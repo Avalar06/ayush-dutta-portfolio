@@ -47,11 +47,11 @@ export const Certifications: React.FC<CertificationsProps> = ({ onSelectCertific
             className="flex items-center space-x-3 mb-3"
           >
             <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
-              04 // VERIFIED CREDENTIALS
+              04 // CERTIFICATIONS
             </span>
             <span className="h-px w-8 bg-[#263449]" />
             <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
-              ACCREDITED CERTIFICATIONS
+              CREDENTIALS
             </span>
           </motion.div>
 

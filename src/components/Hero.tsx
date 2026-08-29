@@ -59,7 +59,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]" />
               </span>
               <span className="text-[11px] uppercase tracking-wider font-mono font-medium text-[#F8FAFC]">
-                AVAILABLE FOR SOC &amp; SECURITY ROLES
+                OPEN TO TECHNOLOGY &amp; CYBERSECURITY OPPORTUNITIES
               </span>
             </motion.div>
 
@@ -72,12 +72,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
             <motion.div variants={itemVariants} className="flex items-center space-x-2 text-lg sm:text-xl font-medium text-[#3B82F6] font-mono mb-4">
               <span>Cybersecurity &amp; Technology</span>
               <span className="text-[#64748B]">•</span>
-              <span className="text-[#94A3B8] text-base font-normal">Security Operations</span>
+              <span className="text-[#94A3B8] text-base font-normal">IT &amp; Tech Operations</span>
             </motion.div>
 
             {/* Primary Statement */}
             <motion.p variants={itemVariants} className="text-base sm:text-lg text-[#CBD5E1] font-normal mb-6 leading-relaxed max-w-2xl">
-              M.Sc. IT Cybersecurity graduate specializing in SIEM log analysis, threat &amp; vulnerability triage, Python automation, and applied machine learning models for intrusion anomaly detection.
+              M.Sc. IT Cybersecurity and BCA graduate with hands-on technical foundations in security monitoring, IT operations, Python automation, and data-driven systems.
             </motion.p>
 
             {/* Clear 3-Tier CTA Hierarchy */}
@@ -154,7 +154,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
                 <div className="flex items-center space-x-2">
                   <Terminal className="w-4 h-4 text-[#3B82F6]" />
                   <span className="text-xs font-mono font-bold text-[#F8FAFC] uppercase tracking-wider">
-                    SECURITY OPERATIONS PROFILE
+                    TECHNOLOGY &amp; SECURITY PROFILE
                   </span>
                 </div>
                 <span className="flex items-center space-x-1.5 text-[10px] font-mono text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded-full border border-[#10B981]/25">
@@ -242,8 +242,8 @@ export const Hero: React.FC<HeroProps> = ({ onOpenResumeModal }) => {
 
           <div className="bg-[#111827] hover:border-[#3B82F6]/50 border border-[#263449] rounded-2xl p-4 sm:p-5 shadow-sm transition-colors">
             <span className="text-[11px] uppercase tracking-wider text-[#94A3B8] font-mono block mb-1">Target Roles</span>
-            <span className="text-lg font-bold text-[#F8FAFC] block mb-0.5">SOC Analyst / IT Sec</span>
-            <span className="text-xs text-[#3B82F6] font-mono">GRC &amp; Security Engineering</span>
+            <span className="text-lg font-bold text-[#F8FAFC] block mb-0.5">Tech &amp; Security Roles</span>
+            <span className="text-xs text-[#3B82F6] font-mono">Cybersecurity, IT Ops &amp; Data</span>
           </div>
         </motion.div>
       </div>

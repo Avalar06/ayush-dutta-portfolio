@@ -48,13 +48,13 @@ export const Contact: React.FC = () => {
           className="max-w-3xl mb-12"
         >
           <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#3B82F6] bg-[#2563EB]/10 border border-[#2563EB]/25 px-3 py-1 rounded-md">
-            COMMUNICATIONS CHANNEL
+            Contact
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
-            Get in Touch with {personal.name}
+            Get in Touch
           </h2>
           <p className="text-sm sm:text-base text-[#94A3B8]">
-            Open to opportunities in Security Operations (SOC), cybersecurity engineering, and applied systems security.
+            I’m open to opportunities across cybersecurity, technology operations, IT, data, and other technical domains.
           </p>
         </motion.div>
 
@@ -70,7 +70,7 @@ export const Contact: React.FC = () => {
             <div className="flex items-center justify-between border-b border-[#263449] pb-4">
               <h3 className="text-base font-bold text-[#F8FAFC] flex items-center space-x-2">
                 <Mail className="w-4 h-4 text-[#3B82F6]" />
-                <span>Direct Contact Channels</span>
+                <span>Contact Details</span>
               </h3>
               <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/10 px-2 py-0.5 rounded border border-[#10B981]/20">
                 ACTIVE
@@ -149,9 +149,8 @@ export const Contact: React.FC = () => {
             <div className="flex items-center justify-between border-b border-[#263449] pb-4 mb-6">
               <h3 className="text-base font-bold text-[#F8FAFC] flex items-center space-x-2">
                 <MessageSquare className="w-4 h-4 text-[#3B82F6]" />
-                <span>Send a Professional Inquiry</span>
+                <span>Send a Message</span>
               </h3>
-              <span className="text-[11px] font-mono text-[#94A3B8]">Fast response</span>
             </div>
 
             {error && (
@@ -165,13 +164,13 @@ export const Contact: React.FC = () => {
                 <div className="w-12 h-12 bg-[#10B981]/20 text-[#10B981] rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <h4 className="text-lg font-bold text-[#F8FAFC]">Message Transmitted Successfully</h4>
+                <h4 className="text-lg font-bold text-[#F8FAFC]">Message Sent Successfully</h4>
                 <p className="text-xs sm:text-sm text-[#94A3B8] max-w-md mx-auto leading-relaxed">
-                  Thank you for reaching out. Ayush will review your communication and respond shortly via {personal.email}.
+                  Thank you for reaching out. I will review your message and respond shortly via {personal.email}.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-5 py-2.5 bg-[#111827] hover:bg-[#263449] text-[#F8FAFC] rounded-xl text-xs font-semibold transition-colors border border-[#263449] mt-2"
+                  className="px-5 py-2.5 bg-[#111827] hover:bg-[#263449] text-[#F8FAFC] rounded-xl text-xs font-semibold transition-colors border border-[#263449] mt-2 focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                 >
                   Send Another Message
                 </button>
@@ -216,7 +215,7 @@ export const Contact: React.FC = () => {
                     type="text"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    placeholder="e.g. SOC Analyst / Security Engineer Role"
+                    placeholder="e.g. Technology / Cybersecurity Opportunity"
                     className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors"
                   />
                 </div>
@@ -230,7 +229,7 @@ export const Contact: React.FC = () => {
                     required
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    placeholder="Details regarding role requirements, interview scheduling, or collaboration..."
+                    placeholder="Share details regarding the role, timeline, or inquiries..."
                     className="w-full bg-[#0B1220] border border-[#263449] focus:border-[#3B82F6] rounded-xl px-4 py-2.5 text-xs text-[#F8FAFC] focus:outline-none transition-colors resize-none"
                   />
                 </div>
@@ -239,10 +238,10 @@ export const Contact: React.FC = () => {
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-semibold py-3 px-5 rounded-xl transition-colors text-xs shadow-sm shadow-[#2563EB]/25"
+                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-semibold py-3 px-5 rounded-xl transition-colors text-xs shadow-sm shadow-[#2563EB]/25 focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                 >
                   <Send className="w-4 h-4" />
-                  <span>Transmit Inquiry</span>
+                  <span>Send Message</span>
                 </motion.button>
               </form>
             )}

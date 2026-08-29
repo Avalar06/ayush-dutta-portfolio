@@ -32,7 +32,7 @@ export const SecurityPractice: React.FC = () => {
           className="max-w-3xl mb-12"
         >
           <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#3B82F6] bg-[#2563EB]/10 border border-[#2563EB]/25 px-3 py-1 rounded-md">
-            PRACTICAL EXPERTISE
+            Core Disciplines
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
             Security Practice & Disciplines
@@ -71,7 +71,7 @@ export const SecurityPractice: React.FC = () => {
 
               <div className="border-t border-[#263449]/70 pt-3 mt-6 text-[10px] text-[#94A3B8] font-mono flex items-center justify-between">
                 <span>Applied Methodology</span>
-                <span className="text-[#10B981]">Grounded</span>
+                <span className="text-[#10B981]">Verified</span>
               </div>
             </motion.div>
           ))}

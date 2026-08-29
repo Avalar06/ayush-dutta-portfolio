@@ -38,11 +38,11 @@ export const Experience: React.FC = () => {
             className="flex items-center space-x-3 mb-3"
           >
             <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
-              02 // CAREER TIMELINE
+              02 // EXPERIENCE
             </span>
             <span className="h-px w-8 bg-[#263449]" />
             <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
-              OPERATIONAL TRACK RECORD
+              INTERNSHIP &amp; TRAINING
             </span>
           </motion.div>
 

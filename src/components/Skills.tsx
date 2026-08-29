@@ -47,11 +47,11 @@ export const Skills: React.FC = () => {
             className="flex items-center space-x-3 mb-3"
           >
             <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
-              03 // CORE CAPABILITIES
+              03 // SKILLS
             </span>
             <span className="h-px w-8 bg-[#263449]" />
             <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
-              SYSTEMS &amp; TOOLING
+              TECHNICAL DOMAINS
             </span>
           </motion.div>
 
@@ -62,7 +62,7 @@ export const Skills: React.FC = () => {
             }}
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F8FAFC] tracking-tight mb-3"
           >
-            Skills &amp; Security Stack
+            Skills &amp; Technical Stack
           </motion.h2>
 
           <motion.p 

@@ -85,14 +85,27 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
           transition={{ duration: 0.45 }}
           className="max-w-3xl mb-12"
         >
-          <span className="text-xs uppercase tracking-wider font-mono font-semibold text-[#3B82F6] bg-[#2563EB]/10 border border-[#2563EB]/25 px-3 py-1 rounded-md">
-            CURRICULUM VITAE
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-[#F8FAFC] tracking-tight mt-3 mb-3">
-            Professional Resumes
+          <motion.div 
+            variants={{
+              hidden: { opacity: 0, y: 8 },
+              visible: { opacity: 1, y: 0, transition: { duration: 0.35 } }
+            }}
+            className="flex items-center space-x-3 mb-3"
+          >
+            <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
+              06 // RESUME
+            </span>
+            <span className="h-px w-8 bg-[#263449]" />
+            <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
+              PROFESSIONAL PROFILE
+            </span>
+          </motion.div>
+
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F8FAFC] tracking-tight mb-3">
+            Professional Resume
           </h2>
-          <p className="text-sm sm:text-base text-[#94A3B8]">
-            Access and download verified technical resumes and specialized profiles for cybersecurity and engineering roles.
+          <p className="text-sm sm:text-base text-[#94A3B8] leading-relaxed max-w-2xl">
+            View and download my current professional resume detailing verified technical skills, academic credentials, and hands-on projects across technology and cybersecurity.
           </p>
         </motion.div>
 
@@ -101,9 +114,9 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
             <div className="w-12 h-12 bg-[#151F2E] border border-[#263449] rounded-full flex items-center justify-center mx-auto mb-4 text-[#94A3B8]">
               <FileText className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-[#F8FAFC] mb-2">Resume Currently Updating</h3>
+            <h3 className="text-lg font-bold text-[#F8FAFC] mb-2">Resume Updating</h3>
             <p className="text-sm text-[#94A3B8] leading-relaxed mb-6">
-              The curriculum vitae document is currently undergoing revision. Please connect via email or LinkedIn for immediate inquiries.
+              The resume document is currently being updated. Please feel free to get in touch directly via email or LinkedIn.
             </p>
             <a
               href="#contact"
@@ -119,35 +132,39 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
               return (
                 <motion.div
                   key={resume.id || idx}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.15 }}
-                  transition={{ duration: 0.45, delay: idx * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/60 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-colors shadow-sm"
+                  transition={{ duration: 0.4, delay: idx * 0.08 }}
+                  className="bg-[#111827] border border-[#263449] hover:border-[#3B82F6]/50 rounded-2xl p-6 sm:p-8 flex flex-col justify-between transition-colors shadow-sm relative group overflow-hidden"
                 >
+                  {/* Top Subtle Accent Ribbon */}
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#2563EB]/40 via-[#3B82F6]/20 to-transparent" />
+
                   <div>
-                    <div className="flex items-center justify-between mb-4 gap-2">
-                      <span className="text-xs font-mono font-semibold text-[#3B82F6] bg-[#2563EB]/10 border border-[#2563EB]/25 px-2.5 py-1 rounded-md inline-block truncate">
-                        TARGET: {resume.targetRoles}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#263449]/70">
+                      <span className="text-[11px] font-mono font-semibold text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/25 px-2.5 py-0.5 rounded-full flex items-center shrink-0">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> VERIFIED RESUME
                       </span>
-                      <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/10 border border-[#10B981]/25 px-2.5 py-0.5 rounded-md flex items-center shrink-0 font-medium">
-                        <CheckCircle2 className="w-3 h-3 inline mr-1" /> PUBLISHED
+                      <span className="text-[11px] font-mono text-[#94A3B8]">
+                        PDF DOCUMENT
                       </span>
                     </div>
 
-                    <h3 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] mb-2.5">{resume.title}</h3>
-                    <p className="text-[#94A3B8] text-xs sm:text-sm leading-relaxed mb-6 font-light">
-                      {resume.description}
+                    <h3 className="text-xl sm:text-2xl font-bold text-[#F8FAFC] mb-2.5 group-hover:text-[#3B82F6] transition-colors">
+                      Resume — Ayush Dutta
+                    </h3>
+                    <p className="text-[#94A3B8] text-xs sm:text-sm leading-relaxed mb-6 font-normal">
+                      Professional profile covering academic credentials, practical projects, technology operations, data workflows, and cybersecurity capabilities.
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-3 pt-5 border-t border-[#263449]">
+                  <div className="flex items-center space-x-3 pt-5 border-t border-[#263449]/80">
                     <motion.button
                       whileHover={{ scale: 1.01 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => onOpenResumeModal(resume.id)}
-                      className="flex-1 inline-flex items-center justify-center space-x-2 bg-[#151F2E] hover:bg-[#263449] text-[#F8FAFC] text-xs font-semibold py-2.5 rounded-xl transition-colors border border-[#263449]"
+                      className="flex-1 inline-flex items-center justify-center space-x-2 bg-[#151F2E] hover:bg-[#263449] text-[#F8FAFC] text-xs font-semibold py-2.5 rounded-xl transition-colors border border-[#263449] focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                     >
                       <Eye className="w-4 h-4 text-[#3B82F6]" />
                       <span>Preview Resume</span>
@@ -158,7 +175,7 @@ export const ResumeSection: React.FC<ResumeSectionProps> = ({ onOpenResumeModal 
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleDownload(resume)}
                       disabled={isDownloading}
-                      className="flex-1 inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] disabled:opacity-50 text-[#F8FAFC] text-xs font-semibold py-2.5 rounded-xl transition-colors shadow-sm shadow-[#2563EB]/25"
+                      className="flex-1 inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] disabled:opacity-50 text-[#F8FAFC] text-xs font-semibold py-2.5 rounded-xl transition-colors shadow-sm shadow-[#2563EB]/25 focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                     >
                       {isDownloading ? (
                         <>

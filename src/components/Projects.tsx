@@ -61,11 +61,11 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
               className="flex items-center space-x-3 mb-3"
             >
               <span className="text-xs font-mono font-bold text-[#3B82F6] tracking-wider">
-                01 // PORTFOLIO WORK
+                01 // PROJECTS
               </span>
               <span className="h-px w-8 bg-[#263449]" />
               <span className="text-[11px] font-mono text-[#94A3B8] uppercase tracking-wider">
-                TECHNICAL CASE STUDIES
+                APPLIED PROJECTS
               </span>
             </motion.div>
 
@@ -76,7 +76,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
               }}
               className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F8FAFC] tracking-tight mb-3"
             >
-              Projects &amp; Security Engineering
+              Projects &amp; Applied Systems
             </motion.h2>
 
             <motion.p 
@@ -185,7 +185,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                         onClick={() => onOpenCaseStudy(flagshipProject)}
                         className="inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-semibold px-5 py-2.5 rounded-xl transition-colors text-xs shadow-sm shadow-[#2563EB]/25 focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
                       >
-                        <span>View Architecture Case Study</span>
+                        <span>View Case Study</span>
                         <ArrowUpRight className="w-4 h-4" />
                       </motion.button>
                     )}
@@ -224,7 +224,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                       <div className="flex items-center space-x-2">
                         <Terminal className="w-4 h-4 text-[#3B82F6]" />
                         <h4 className="text-xs font-mono font-bold text-[#F8FAFC] uppercase tracking-wider">
-                          Security Architecture &amp; Detection Pipeline
+                          System Architecture &amp; Detection Pipeline
                         </h4>
                       </div>
                       <span className="text-[10px] font-mono text-[#94A3B8]">Workflow Stages</span>
@@ -334,7 +334,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenCaseStudy }) => {
                   </div>
 
                   <div className="pt-4 border-t border-[#263449]/70 flex items-center justify-between gap-3">
-                    <span className="text-xs text-[#94A3B8] font-mono">Security Case Study</span>
+                    <span className="text-xs text-[#94A3B8] font-mono">Case Study</span>
                     <div className="flex items-center space-x-3">
                       {project.github && (
                         <a

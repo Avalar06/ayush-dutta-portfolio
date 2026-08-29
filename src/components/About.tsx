@@ -121,11 +121,13 @@ export const About: React.FC = () => {
             className="lg:col-span-7 bg-[#151F2E] border border-[#263449] rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl relative"
           >
             <p className="text-[#F8FAFC] text-base sm:text-lg leading-relaxed font-light">
-              {about.summary}
+              {about.summary && !about.summary.startsWith('Ayush Dutta is')
+                ? about.summary
+                : "I am a technology and cybersecurity-focused graduate with a Bachelor of Computer Applications and an M.Sc. in IT Cybersecurity. I have hands-on experience through independent technical projects and a structured cybersecurity internship, with interests spanning cybersecurity, technology operations, data, automation, and applied systems."}
             </p>
 
             <p className="text-[#94A3B8] text-sm sm:text-base leading-relaxed font-light">
-              With an M.Sc. in IT Cybersecurity from MAKAUT (CGPA 8.04) and a BCA degree from NSHM Knowledge Campus (SGPA 8.95), {personal.name} combines formal academic training in cryptography, network security, and risk analysis with practical implementation in Python, machine learning, and security monitoring workflows.
+              With an M.Sc. in IT Cybersecurity from MAKAUT (CGPA 8.04) and a BCA degree from NSHM Knowledge Campus (SGPA 8.95), I combine formal academic training in cryptography, network security, and risk analysis with practical implementation in Python, machine learning, and security monitoring workflows.
             </p>
 
             <div className="border-t border-[#263449] pt-6">

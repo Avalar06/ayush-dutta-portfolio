@@ -126,10 +126,11 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selec
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-bold text-[#F8FAFC]">
-                    {activeResume ? activeResume.title : 'Curriculum Vitae Viewer'}
+                    Resume — Ayush Dutta
                   </h3>
-                  <p className="text-xs text-[#94A3B8] font-mono">
-                    {activeResume ? `Target: ${activeResume.targetRoles}` : 'Published Resume Document'}
+                  <p className="text-xs text-[#94A3B8] font-mono flex items-center gap-1.5 mt-0.5">
+                    <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                    <span>Verified Technical Resume & Academic Profile</span>
                   </p>
                 </div>
               </div>
@@ -146,7 +147,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selec
             {/* Tab Selection if multiple published versions exist */}
             {publishedResumes.length > 1 && (
               <div className="flex flex-wrap gap-2 mb-4 bg-[#151F2E] p-1.5 rounded-xl border border-[#263449]">
-                {publishedResumes.map((resume) => {
+                {publishedResumes.map((resume, rIdx) => {
                   const isSelected = (activeResume?.id === resume.id);
                   return (
                     <button
@@ -163,7 +164,7 @@ export const ResumeModal: React.FC<ResumeModalProps> = ({ isOpen, onClose, selec
                       }`}
                     >
                       <ShieldCheck className="w-3.5 h-3.5" />
-                      <span>{resume.title}</span>
+                      <span>{publishedResumes.length > 1 ? `Resume Version ${rIdx + 1}` : 'Resume Document'}</span>
                     </button>
                   );
                 })}
