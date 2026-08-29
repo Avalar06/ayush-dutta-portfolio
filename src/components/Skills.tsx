@@ -127,14 +127,26 @@ export const Skills: React.FC = () => {
                         Core Stack &amp; Tooling
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {category.skills.map((skill, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="bg-[#151F2E] border border-[#263449] hover:border-[#3B82F6]/50 hover:text-[#F8FAFC] text-[#CBD5E1] text-xs px-2.5 py-1 rounded-lg font-mono transition-colors"
-                          >
-                            {skill}
-                          </span>
-                        ))}
+                        {category.skills.map((skill: any, sIdx: number) => {
+                          const skillName = typeof skill === 'string' ? skill : (skill?.name || String(skill));
+                          const hasLevel = typeof skill === 'object' && skill !== null && 'level' in skill;
+                          const level = Math.min(100, Math.max(0, Number(skill?.level) || 0));
+
+                          return (
+                            <span
+                              key={sIdx}
+                              className="bg-[#151F2E] border border-[#263449] hover:border-[#3B82F6]/50 hover:text-[#F8FAFC] text-[#CBD5E1] text-xs px-2.5 py-1 rounded-lg font-mono transition-colors relative overflow-hidden"
+                            >
+                              {hasLevel && (
+                                <span
+                                  className="absolute bottom-0 left-0 h-0.5 bg-[#3B82F6]"
+                                  style={{ width: `${level}%` }}
+                                />
+                              )}
+                              {skillName}
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
