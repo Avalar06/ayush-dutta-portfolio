@@ -1,6 +1,6 @@
 # Cybersecurity & Software Engineering Portfolio Platform
 
-A database-backed, content-driven portfolio web application and content management system engineered with React 19, TypeScript, Tailwind CSS, and Supabase. The platform establishes a strict architectural decoupling between structured professional records and responsive UI presentation, enabling real-time administrative content lifecycle management without requiring frontend code modifications or layout refactoring.
+A database-backed, content-driven portfolio web application and content management system engineered with React 19, TypeScript, Tailwind CSS, and Supabase. The platform establishes a strict architectural decoupling between structured professional records and responsive UI presentation, enabling administrative content lifecycle management without requiring frontend code modifications or layout refactoring.
 
 ---
 
@@ -12,9 +12,26 @@ The user interface automatically derives categories, recomputes grid geometries,
 
 ---
 
+## Why This Project?
+
+This portfolio was intentionally engineered as a production application rather than a static personal website.
+
+It demonstrates practical implementation of:
+
+- Secure application architecture
+- Role-based administrative access
+- PostgreSQL Row Level Security
+- Secure file handling
+- Server-side secret isolation
+- Serverless API integration
+- Responsive, content-driven UI architecture
+- Production deployment and validation
+
+---
+
 ## Key Features
 
-- **Dynamic Content Flow**: Public sections render iteratively from structured data collections with real-time UI synchronization upon administrative updates.
+- **Dynamic Content Flow**: Public sections render iteratively from structured database collections and automatically reflect published administrative updates.
 - **Projects & Technical Case Studies**: Interactive project cards featuring status tags, applied technology badges, architecture workflows, live/repository links, and deep-dive case study modal dialogs.
 - **Search & Dynamic Category Filtering**: Client-side text search across titles, technologies, and descriptions, paired with category tabs derived dynamically from active database records.
 - **Categorized Skills Matrix**: Grouped technical tool, language, and framework inventories with intrinsic flex wrapping.
@@ -67,7 +84,7 @@ flowchart LR
 
     subgraph Data & Cache Management
         SupaDB -->|Published Records\npublished = true| StorageService[portfolioStorage Service]
-        StorageService -->|State Synchronization\nportfolio_updated event| ReactState[React State & Hooks]
+        StorageService -->|State Synchronization| ReactState[React State & Hooks]
     end
 
     subgraph Dynamic UI Rendering
@@ -177,7 +194,7 @@ The interface adapts across mobile, tablet, desktop, and wide displays:
 
 - **Keyboard Navigation**: Document flow with logical tab indexing, distinct `:focus-visible` outline rings, and global `Escape` key listeners for modal dismissal.
 - **Semantic HTML**: Structural hierarchy using `<header>`, `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, and `<button>`.
-- **Contrast & Legibility**: High-contrast text pairings designed for dark-mode readability compliant with WCAG AA guidelines.
+- **Contrast & Legibility**: High-contrast text pairings designed for readability across the dark interface.
 - **Reduced Motion Support**: Animations respect system `prefers-reduced-motion: reduce` settings.
 
 ---
@@ -310,8 +327,8 @@ The application utilizes route-level and component-level code splitting via `Rea
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd <repository-directory>
+   git clone https://github.com/Avalar06/ayush-dutta-portfolio.git
+   cd ayush-dutta-portfolio
    ```
 
 2. **Install dependencies**:
@@ -332,7 +349,7 @@ The application utilizes route-level and component-level code splitting via `Rea
 
 ### Available Scripts
 
-- `npm run dev`: Starts the Vite development server with Hot Module Replacement.
+- `npm run dev`: Starts the Vite development server.
 - `npm run lint`: Executes TypeScript type checking across the project (`tsc --noEmit`).
 - `npm run build`: Compiles and bundles production assets into `dist/`.
 - `npm run preview`: Serves the production build locally for verification.
@@ -363,29 +380,32 @@ supabase secrets set RESEND_FROM_EMAIL="Portfolio Contact <onboarding@resend.dev
 
 ## Deployment
 
-### 1. Static Frontend Deployment (Vercel / Netlify / Cloudflare Pages / Cloud Run)
-The application builds to static assets in `dist/`. Ensure your hosting provider is configured for Single Page Application (SPA) routing:
+### Production Deployment
 
-- **Vercel** (`vercel.json`):
-  ```json
-  {
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-  }
-  ```
+The frontend is deployed on Vercel and automatically redeployed when changes are pushed to the `main` branch.
 
-- **Netlify / Cloudflare Pages** (`_redirects`):
-  ```text
-  /*    /index.html   200
-  ```
+```text
+Local Development
+      ↓
+Git Commit
+      ↓
+GitHub / main
+      ↓
+Vercel Build
+      ↓
+Production Deployment
+```
 
-- **Nginx** (`nginx.conf`):
-  ```nginx
-  location / {
-    try_files $uri $uri/ /index.html;
-  }
-  ```
+Ensure Vercel is configured with SPA rewrite routing in `vercel.json` (or Project Settings) to support direct path navigation on routes like `/admin` and `/reset-password`:
 
-### 2. Supabase Edge Function Deployment
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
+
+### Supabase Edge Function Deployment
+
 Deploy the contact Edge Function without requiring client JWT verification (the function internally enforces CORS, validation, and honeypot protection):
 
 ```bash
@@ -430,4 +450,6 @@ supabase functions deploy contact --no-verify-jwt
 
 **Ayush Dutta**  
 Cybersecurity & Software Engineering Professional  
-Portfolio: [Ayush Dutta Portfolio](https://github.com/ayushdutta)
+
+- **Live Portfolio:** [https://ayush-dutta-portfolio.vercel.app/](https://ayush-dutta-portfolio.vercel.app/)
+- **Source Repository:** [https://github.com/Avalar06/ayush-dutta-portfolio](https://github.com/Avalar06/ayush-dutta-portfolio)
