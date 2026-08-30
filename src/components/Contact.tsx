@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2, Copy, Check, MessageSquare, ShieldCheck } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Github, Send, CheckCircle2, Copy, Check, MessageSquare, ShieldCheck, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getPortfolioData } from '../services/portfolioStorage';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { isValidEmail, sanitizeString, checkContactFormRateLimit, recordContactFormSubmission } from '../utils/security';
 
 export const Contact: React.FC = () => {
@@ -9,6 +10,7 @@ export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [honeypot, setHoneypot] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,10 +28,11 @@ export const Contact: React.FC = () => {
     setTimeout(() => setCopiedEmail(false), 2000);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
-    // Honeypot check: If the hidden honeypot field is filled, silently simulate success to drop spam
+    // Honeypot check: If the hidden honeypot field is filled, silently simulate success to drop spam bots
     if (honeypot.trim()) {
       setSubmitted(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
@@ -51,6 +54,11 @@ export const Contact: React.FC = () => {
       return;
     }
 
+    if (cleanMessage.length < 10) {
+      setError('Message must be at least 10 characters long.');
+      return;
+    }
+
     // Rate limiting check
     const rateLimit = checkContactFormRateLimit();
     if (!rateLimit.allowed) {
@@ -58,14 +66,50 @@ export const Contact: React.FC = () => {
       return;
     }
 
-    // Record submission timestamp for client-side rate limiting
-    recordContactFormSubmission();
-
     setError(null);
-    setSubmitted(true);
-    setTimeout(() => {
+    setIsSubmitting(true);
+
+    try {
+      if (!isSupabaseConfigured()) {
+        throw new Error(`Contact service is not connected yet. Please email directly at ${personal.email}.`);
+      }
+
+      const { data: result, error: fnError } = await supabase.functions.invoke('contact', {
+        body: {
+          name: cleanName,
+          email: cleanEmail,
+          subject: cleanSubject,
+          message: cleanMessage,
+          website_hp: honeypot,
+        },
+      });
+
+      if (fnError) {
+        let errorMsg = 'Failed to deliver message via contact service. Please reach out directly.';
+        if (fnError.message) {
+          try {
+            const parsed = JSON.parse(fnError.message);
+            if (parsed?.error) errorMsg = parsed.error;
+          } catch {
+            errorMsg = fnError.message;
+          }
+        }
+        throw new Error(errorMsg);
+      }
+
+      if (!result?.success) {
+        throw new Error(result?.error || 'Failed to send message. Please try again or reach out directly via email.');
+      }
+
+      // Record submission timestamp for client-side rate limiting
+      recordContactFormSubmission();
+      setSubmitted(true);
       setFormData({ name: '', email: '', subject: '', message: '' });
-    }, 4000);
+    } catch (err: any) {
+      setError(err?.message || 'Failed to deliver your message. Please reach out directly to the email above.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -284,13 +328,27 @@ export const Contact: React.FC = () => {
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: isSubmitting ? 1 : 1.01 }}
+                  whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                   type="submit"
-                  className="w-full inline-flex items-center justify-center space-x-2 bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] font-semibold py-3 px-5 rounded-xl transition-colors text-xs shadow-sm shadow-[#2563EB]/25 focus-visible:outline-2 focus-visible:outline-[#3B82F6]"
+                  disabled={isSubmitting}
+                  className={`w-full inline-flex items-center justify-center space-x-2 font-semibold py-3 px-5 rounded-xl transition-all text-xs shadow-sm focus-visible:outline-2 focus-visible:outline-[#3B82F6] ${
+                    isSubmitting
+                      ? 'bg-[#2563EB]/50 text-white/70 cursor-not-allowed'
+                      : 'bg-[#2563EB] hover:bg-[#3B82F6] text-[#F8FAFC] shadow-[#2563EB]/25'
+                  }`}
                 >
-                  <Send className="w-4 h-4" />
-                  <span>Send Message</span>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-[#38BDF8]" />
+                      <span>Sending Message...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Send Message</span>
+                    </>
+                  )}
                 </motion.button>
               </form>
             )}
